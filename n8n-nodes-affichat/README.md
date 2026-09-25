@@ -72,3 +72,4 @@ In your n8n instance:
 ## License
 
 MIT
+
