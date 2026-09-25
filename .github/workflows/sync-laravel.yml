@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'affichat-laravel/**'
+      - '.github/workflows/sync-laravel.yml'
     tags:
       - 'laravel-v*'
       - 'v*'
