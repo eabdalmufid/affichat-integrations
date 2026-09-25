@@ -71,27 +71,30 @@
 
             if (msg && msg.trim()) {
                 var previewTags = (typeof affichat_wp_vars !== 'undefined' && affichat_wp_vars.preview_tags) ? affichat_wp_vars.preview_tags : {};
-                var rendered = msg;
 
-                // Replace dynamic tags with preview values (highlighted with subtle accent)
-                Object.keys(previewTags).forEach(function (tag) {
-                    if (rendered.indexOf(tag) !== -1) {
-                        var val = previewTags[tag];
-                        var regex = new RegExp(tag.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1"), 'g');
-                        rendered = rendered.replace(regex, '<span class="affichat-preview-variable" title="' + tag + '">' + val + '</span>');
-                    }
-                });
+                // 1. First escape raw HTML to prevent XSS
+                var rendered = $('<div>').text(msg).html();
 
-                // Fallback for any other {tag} not specifically defined
-                rendered = rendered.replace(/\{([a-zA-Z0-9_\-]+)\}/g, '<span class="affichat-preview-variable" title="{$1}">$1</span>');
-
-                var formatted = rendered
+                // 2. Format WhatsApp markdown (*bold*, _italic_, ~strike~)
+                rendered = rendered
                     .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
                     .replace(/_(.*?)_/g, '<em>$1</em>')
                     .replace(/~(.*?)~/g, '<del>$1</del>')
                     .replace(/\n/g, '<br/>');
 
-                $('#affichat-preview-text').html(formatted);
+                // 3. Replace dynamic tags with clean preview badges (renders directly as Indovite)
+                Object.keys(previewTags).forEach(function (tag) {
+                    if (rendered.indexOf(tag) !== -1) {
+                        var val = $('<div>').text(previewTags[tag]).html();
+                        var safeTag = tag.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+                        rendered = rendered.replace(new RegExp(safeTag, 'g'), '<span class="affichat-preview-variable" title="' + tag + '">' + val + '</span>');
+                    }
+                });
+
+                // Fallback for custom undefined tags: {custom_tag} -> renders the tag cleanly inside span
+                rendered = rendered.replace(/\{([a-zA-Z0-9_\-]+)\}/g, '<span class="affichat-preview-variable" title="{$1}">{$1}</span>');
+
+                $('#affichat-preview-text').html(rendered);
             } else {
                 $('#affichat-preview-text').text('Ketik pesan di formulir untuk melihat pratinjau langsung...');
             }
