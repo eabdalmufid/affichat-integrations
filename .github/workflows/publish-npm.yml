@@ -75,7 +75,7 @@ jobs:
             echo "Version $CURRENT_VERSION already exists on npm registry. Skipping."
           else
             echo "Publishing version $CURRENT_VERSION to npm..."
-            npm install
+            npm install --ignore-scripts
             npm run build
             npm publish --access public
           fi
