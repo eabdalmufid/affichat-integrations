@@ -1,0 +1,45 @@
+{
+  "name": "@affidev/affichat",
+  "version": "1.0.0",
+  "description": "Official TypeScript & JavaScript SDK for AffiChat WhatsApp Gateway",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "whatsapp",
+    "gateway",
+    "sdk",
+    "affichat",
+    "affidev",
+    "whatsapp-api",
+    "messaging"
+  ],
+  "author": "AffiDev",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

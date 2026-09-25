@@ -1,0 +1,49 @@
+{
+  "name": "@affidev/n8n-nodes-affichat",
+  "version": "1.0.0",
+  "description": "Official n8n community node for AffiChat WhatsApp Gateway",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "whatsapp",
+    "affichat",
+    "affidev",
+    "gateway"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "AffiDev",
+    "email": "support@affidev.com"
+  },
+  "main": "dist/nodes/AffiChat/AffiChat.node.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/AffiChatApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/AffiChat/AffiChat.node.js",
+      "dist/nodes/AffiChat/AffiChatTrigger.node.js"
+    ]
+  },
+  "scripts": {
+    "build": "tsc && copyfiles -u 0 nodes/**/*.svg dist/",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1",
+    "n8n-workflow": "^1.82.0",
+    "typescript": "^5.8.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

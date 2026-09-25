@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Temporary & Cache
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# Environment & Local Secrets
+.env
+.env.*
+wa_credentials/
+# Build Artifacts
+*.zip
+*.tar.gz

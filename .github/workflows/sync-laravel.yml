@@ -1,0 +1,34 @@
+name: Sync Laravel Repository
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'affichat-laravel/**'
+    tags:
+      - 'laravel-v*'
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  split-laravel:
+    name: Subtree Split to Laravel Repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Monorepo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push Subtree to Standalone Laravel Repo
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.SYNC_LARAVEL_TOKEN || secrets.GITHUB_TOKEN }}
+        with:
+          source-directory: 'affichat-laravel'
+          destination-github-username: 'eabdalmufid'
+          destination-repository-name: 'affichat-laravel'
+          user-email: 'admin@affidev.com'
+          user-name: 'AffiChat Bot'
+          target-branch: 'main'

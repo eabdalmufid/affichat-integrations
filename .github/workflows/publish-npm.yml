@@ -1,0 +1,81 @@
+name: Publish NPM Packages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'affichat-sdk/**'
+      - 'n8n-nodes-affichat/**'
+    tags:
+      - 'sdk-v*'
+      - 'n8n-v*'
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish-sdk:
+    name: Publish @affidev/affichat SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check and Publish SDK
+        working-directory: affichat-sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          echo "Package: $PACKAGE_NAME @ $CURRENT_VERSION"
+
+          PUBLISHED_VERSION=$(npm view "$PACKAGE_NAME@$CURRENT_VERSION" version 2>/dev/null || echo "")
+
+          if [ "$PUBLISHED_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "Version $CURRENT_VERSION already exists on npm registry. Skipping."
+          else
+            echo "Publishing version $CURRENT_VERSION to npm..."
+            npm install
+            npm run build
+            npm publish --access public
+          fi
+
+  publish-n8n:
+    name: Publish @affidev/n8n-nodes-affichat
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check and Publish n8n Community Node
+        working-directory: n8n-nodes-affichat
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          echo "Package: $PACKAGE_NAME @ $CURRENT_VERSION"
+
+          PUBLISHED_VERSION=$(npm view "$PACKAGE_NAME@$CURRENT_VERSION" version 2>/dev/null || echo "")
+
+          if [ "$PUBLISHED_VERSION" = "$CURRENT_VERSION" ]; then
+            echo "Version $CURRENT_VERSION already exists on npm registry. Skipping."
+          else
+            echo "Publishing version $CURRENT_VERSION to npm..."
+            npm install
+            npm run build
+            npm publish --access public
+          fi
