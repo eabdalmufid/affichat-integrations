@@ -6,7 +6,7 @@
  */
 
 define('ABSPATH', true);
-define('AFFICHAT_WP_VERSION', '1.0.0');
+define('AFFICHAT_WP_VERSION', '1.0.1');
 define('AFFICHAT_WP_PATH', dirname(__DIR__) . '/');
 define('AFFICHAT_WP_URL', 'http://example.com/wp-content/plugins/affichat-wordpress/');
 define('AFFICHAT_WP_BASENAME', 'affichat-wordpress/affichat-wordpress.php');

@@ -70,12 +70,27 @@
             }
 
             if (msg && msg.trim()) {
-                var escaped = $('<div>').text(msg).html();
-                var formatted = escaped
+                var previewTags = (typeof affichat_wp_vars !== 'undefined' && affichat_wp_vars.preview_tags) ? affichat_wp_vars.preview_tags : {};
+                var rendered = msg;
+
+                // Replace dynamic tags with preview values (highlighted with subtle accent)
+                Object.keys(previewTags).forEach(function (tag) {
+                    if (rendered.indexOf(tag) !== -1) {
+                        var val = previewTags[tag];
+                        var regex = new RegExp(tag.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1"), 'g');
+                        rendered = rendered.replace(regex, '<span class="affichat-preview-variable" title="' + tag + '">' + val + '</span>');
+                    }
+                });
+
+                // Fallback for any other {tag} not specifically defined
+                rendered = rendered.replace(/\{([a-zA-Z0-9_\-]+)\}/g, '<span class="affichat-preview-variable" title="{$1}">$1</span>');
+
+                var formatted = rendered
                     .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
                     .replace(/_(.*?)_/g, '<em>$1</em>')
                     .replace(/~(.*?)~/g, '<del>$1</del>')
                     .replace(/\n/g, '<br/>');
+
                 $('#affichat-preview-text').html(formatted);
             } else {
                 $('#affichat-preview-text').text('Ketik pesan di formulir untuk melihat pratinjau langsung...');
