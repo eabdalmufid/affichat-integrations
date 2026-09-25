@@ -20,15 +20,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.SYNC_LARAVEL_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "AffiChat Bot"
+          git config --global user.email "admin@affidev.com"
 
       - name: Push Subtree to Standalone Laravel Repo
-        uses: cpina/github-action-push-to-another-repository@main
         env:
-          API_TOKEN_GITHUB: ${{ secrets.SYNC_LARAVEL_TOKEN || secrets.GITHUB_TOKEN }}
-        with:
-          source-directory: 'affichat-laravel'
-          destination-github-username: 'eabdalmufid'
-          destination-repository-name: 'affichat-laravel'
-          user-email: 'admin@affidev.com'
-          user-name: 'AffiChat Bot'
-          target-branch: 'main'
+          DEST_TOKEN: ${{ secrets.SYNC_LARAVEL_TOKEN }}
+        run: |
+          # Split folder affichat-laravel into a temporary branch
+          git subtree split --prefix=affichat-laravel -b standalone-laravel
+
+          # Push to the standalone repo main branch (even if empty)
+          git push -f https://eabdalmufid:${DEST_TOKEN}@github.com/eabdalmufid/affichat-laravel.git standalone-laravel:main
