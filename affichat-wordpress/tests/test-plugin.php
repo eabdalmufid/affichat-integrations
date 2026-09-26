@@ -6,7 +6,7 @@
  */
 
 define('ABSPATH', true);
-define('AFFICHAT_WP_VERSION', '1.0.5');
+define('AFFICHAT_WP_VERSION', '1.0.6');
 define('AFFICHAT_WP_PATH', dirname(__DIR__) . '/');
 define('AFFICHAT_WP_URL', 'http://example.com/wp-content/plugins/affichat-wordpress/');
 define('AFFICHAT_WP_BASENAME', 'affichat-wordpress/affichat-wordpress.php');
@@ -521,6 +521,14 @@ it('Markdown parser converts links and code blocks', strpos($parsed_html, '<a hr
 
 $post_install_res = $updater->post_install(true, ['plugin' => 'affichat-wordpress/affichat-wordpress.php'], ['destination' => '/var/www/plugins/affichat-wordpress']);
 it('Updater post_install returns response boolean without deleting destination', $post_install_res === true);
+
+$sanitized_slug_args = (object) ['slug' => 'affichat-whatsapp-gateway-for-wordpress-woocommerce'];
+$sanitized_info_res = $updater->plugin_info(false, 'plugin_information', $sanitized_slug_args);
+it('Updater plugin_info resolves sanitized plugin title slug', is_object($sanitized_info_res) && !empty($sanitized_info_res->name));
+
+$mock_meta = ['<a href="plugin-install.php?tab=plugin-information&plugin=affichat-whatsapp-gateway-for-wordpress-woocommerce">View details</a>'];
+$fixed_meta = $updater->plugin_row_meta($mock_meta, 'affichat-wordpress/affichat-wordpress.php');
+it('Updater plugin_row_meta normalizes thickbox link to affichat-wordpress slug', strpos($fixed_meta[0], 'plugin=affichat-wordpress') !== false);
 
 echo "\n=================================================================\n";
 echo "SUMMARY: Total Asserts: {$total_asserts} | Passed: {$passed_asserts} | Failed: {$failed_asserts}\n";

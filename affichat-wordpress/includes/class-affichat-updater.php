@@ -38,6 +38,7 @@ class AffiChat_WP_Updater {
         add_filter('site_transient_update_plugins', [$instance, 'check_update']);
         add_filter('plugins_api', [$instance, 'plugin_info'], 20, 3);
         add_filter('upgrader_post_install', [$instance, 'post_install'], 10, 3);
+        add_filter('plugin_row_meta', [$instance, 'plugin_row_meta'], 10, 2);
         add_action('admin_post_affichat_check_update', [$instance, 'handle_manual_check']);
         add_action('admin_notices', [$instance, 'render_admin_notice']);
     }
@@ -181,6 +182,25 @@ class AffiChat_WP_Updater {
     }
 
     /**
+     * Normalizes the "View details" Thickbox modal link in the plugins list table.
+     *
+     * @param array  $meta Plugin row meta links.
+     * @param string $file Plugin file basename.
+     * @return array Modified meta links.
+     */
+    public function plugin_row_meta($meta, $file) {
+        $basename = defined('AFFICHAT_WP_BASENAME') ? AFFICHAT_WP_BASENAME : 'affichat-wordpress/affichat-wordpress.php';
+        if ($file === $basename && is_array($meta)) {
+            foreach ($meta as &$item) {
+                if (strpos($item, 'plugin-install.php?tab=plugin-information') !== false) {
+                    $item = preg_replace('/plugin=[^&"]+/', 'plugin=affichat-wordpress', $item);
+                }
+            }
+        }
+        return $meta;
+    }
+
+    /**
      * Returns plugin metadata modal details when user clicks "View version details".
      *
      * @param false|object|array $result Default API result.
@@ -189,14 +209,30 @@ class AffiChat_WP_Updater {
      * @return false|object Plugin info object or original result.
      */
     public function plugin_info($result, $action, $args) {
-        if ($action !== 'plugin_information' || empty($args->slug) || $args->slug !== 'affichat-wordpress') {
+        if ($action !== 'plugin_information' || empty($args->slug)) {
+            return $result;
+        }
+
+        $basename = defined('AFFICHAT_WP_BASENAME') ? AFFICHAT_WP_BASENAME : 'affichat-wordpress/affichat-wordpress.php';
+
+        $is_affichat = (
+            $args->slug === 'affichat-wordpress' ||
+            $args->slug === $basename ||
+            $args->slug === 'affichat-whatsapp-gateway-for-wordpress-woocommerce' ||
+            stripos($args->slug, 'affichat') !== false
+        );
+
+        if (!$is_affichat) {
             return $result;
         }
 
         $remote = $this->get_remote_release();
-        if (!$remote) {
-            return $result;
-        }
+        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.6';
+        $version = ($remote && !empty($remote->version)) ? $remote->version : $current_version;
+        $download_url = ($remote && !empty($remote->download_url)) ? $remote->download_url : '';
+        $homepage = ($remote && !empty($remote->homepage)) ? $remote->homepage : 'https://chat.affidev.com';
+        $changelog_raw = ($remote && !empty($remote->changelog)) ? $remote->changelog : sprintf(__('Versi %s telah dirilis.', 'affichat-wp'), esc_html($version));
+        $published_at = ($remote && !empty($remote->published_at)) ? $remote->published_at : current_time('mysql');
 
         $wp_version = function_exists('get_bloginfo') ? preg_replace('/-.*$/', '', get_bloginfo('version')) : '6.7';
 
@@ -205,15 +241,15 @@ class AffiChat_WP_Updater {
 
         $info = new stdClass();
         $info->name           = 'AffiChat - WhatsApp Gateway for WordPress & WooCommerce';
-        $info->slug           = 'affichat-wordpress';
-        $info->version        = $remote->version;
+        $info->slug           = $args->slug;
+        $info->version        = $version;
         $info->author         = '<a href="https://chat.affidev.com" target="_blank" rel="noopener">AffiChat</a>';
-        $info->homepage       = $remote->homepage;
-        $info->download_link  = $remote->download_url;
+        $info->homepage       = $homepage;
+        $info->download_link  = $download_url;
         $info->tested         = !empty($wp_version) ? $wp_version : '6.7';
         $info->requires       = '5.8';
         $info->requires_php   = '7.4';
-        $info->last_updated   = $remote->published_at;
+        $info->last_updated   = $published_at;
         $info->rating         = 100;
         $info->ratings        = [5 => 28, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
         $info->num_ratings    = 28;
@@ -228,7 +264,7 @@ class AffiChat_WP_Updater {
             'high' => $logo_url,
         ];
 
-        $changelog_raw  = !empty($remote->changelog) ? $remote->changelog : sprintf(__('Versi %s telah dirilis.', 'affichat-wp'), esc_html($remote->version));
+        $changelog_raw  = ($remote && !empty($remote->changelog)) ? $remote->changelog : sprintf(__('Versi %s telah dirilis.', 'affichat-wp'), esc_html($version));
         $changelog_html = $this->parse_markdown_to_html($changelog_raw);
 
         $info->sections = [
@@ -248,7 +284,7 @@ class AffiChat_WP_Updater {
                 '<h4 style="margin: 12px 0 8px;">' . esc_html__('Langkah Instalasi & Konfigurasi:', 'affichat-wp') . '</h4>' .
                 '<ol style="margin: 8px 0 16px 20px; list-style-type: decimal;">' .
                     '<li>' . esc_html__('Buka menu AffiChat di sidebar WP-Admin.', 'affichat-wp') . '</li>' .
-                    '<li>' . esc_html__('Masukkan URL Gateway, Access Key / API Key, dan Session ID dari server WhatsApp Anda.', 'affichat-wp') . '</li>' .
+                    '<li>' . esc_html__('Masukkan Access Key / API Key, dan Session ID dari server WhatsApp Anda.', 'affichat-wp') . '</li>' .
                     '<li>' . esc_html__('Klik tombol "Cek Koneksi" untuk memastikan WhatsApp terhubung.', 'affichat-wp') . '</li>' .
                     '<li>' . esc_html__('Aktifkan notifikasi WooCommerce dan sesuaikan template pesan sesuai kebutuhan bisnis Anda.', 'affichat-wp') . '</li>' .
                 '</ol>',
