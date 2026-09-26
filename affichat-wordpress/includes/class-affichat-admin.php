@@ -47,6 +47,24 @@ class AffiChat_WP_Admin {
         register_setting('affichat_wp_forms_group', 'affichat_wp_wpforms_enabled');
         register_setting('affichat_wp_forms_group', 'affichat_wp_fluentform_enabled');
         register_setting('affichat_wp_forms_group', 'affichat_wp_user_reg_admin_notify');
+
+        // WooCommerce extra settings
+        register_setting('affichat_wp_wc_group', 'affichat_wc_completed_send_image');
+        register_setting('affichat_wp_wc_group', 'affichat_wc_cust_onhold_enabled');
+        register_setting('affichat_wp_wc_group', 'affichat_wc_cust_onhold_template');
+        register_setting('affichat_wp_wc_group', 'affichat_wc_cust_refunded_enabled');
+        register_setting('affichat_wp_wc_group', 'affichat_wc_cust_refunded_template');
+
+        // Tools, Contacts, Location & Poll settings
+        register_setting('affichat_wp_tools_group', 'affichat_contacts_auto_sync');
+        register_setting('affichat_wp_tools_group', 'affichat_store_latitude');
+        register_setting('affichat_wp_tools_group', 'affichat_store_longitude');
+        register_setting('affichat_wp_tools_group', 'affichat_store_name');
+        register_setting('affichat_wp_tools_group', 'affichat_store_address');
+        register_setting('affichat_wp_tools_group', 'affichat_wc_poll_enabled');
+        register_setting('affichat_wp_tools_group', 'affichat_wc_poll_delay_days');
+        register_setting('affichat_wp_tools_group', 'affichat_wc_poll_question');
+        register_setting('affichat_wp_tools_group', 'affichat_wc_poll_options');
     }
 
     /**
@@ -102,6 +120,15 @@ class AffiChat_WP_Admin {
             'affichat-wp-integrations',
             [__CLASS__, 'render_integrations_page']
         );
+
+        add_submenu_page(
+            'affichat-wp',
+            __('Alat, Kontak & Siaran', 'affichat-wp'),
+            __('Alat & Kontak', 'affichat-wp'),
+            'manage_options',
+            'affichat-wp-tools',
+            [__CLASS__, 'render_tools_page']
+        );
     }
 
     /**
@@ -113,6 +140,7 @@ class AffiChat_WP_Admin {
             'affichat-wa_page_affichat-wp-quick-send',
             'affichat-wa_page_affichat-wp-woocommerce',
             'affichat-wa_page_affichat-wp-integrations',
+            'affichat-wa_page_affichat-wp-tools',
         ];
 
         $is_wc_tab = (isset($_GET['page']) && $_GET['page'] === 'wc-settings' && isset($_GET['tab']) && $_GET['tab'] === 'affichat_whatsapp');
@@ -201,6 +229,11 @@ class AffiChat_WP_Admin {
                 'title' => __('Form & Integrasi', 'affichat-wp'),
                 'url'   => admin_url('admin.php?page=affichat-wp-integrations'),
                 'icon'  => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="' . $svg_style . '"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>',
+            ],
+            'tools'        => [
+                'title' => __('Alat & Kontak', 'affichat-wp'),
+                'url'   => admin_url('admin.php?page=affichat-wp-tools'),
+                'icon'  => '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="' . $svg_style . '"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>',
             ],
         ];
         ?>
@@ -434,11 +467,12 @@ class AffiChat_WP_Admin {
             update_option('affichat_wc_admin_phone', sanitize_text_field($_POST['affichat_wc_admin_phone']));
             update_option('affichat_wc_admin_template', wp_kses_post($_POST['affichat_wc_admin_template']));
 
-            $statuses = ['pending', 'processing', 'completed', 'cancelled'];
+            $statuses = ['pending', 'processing', 'onhold', 'completed', 'cancelled', 'refunded'];
             foreach ($statuses as $st) {
                 update_option("affichat_wc_cust_{$st}_enabled", isset($_POST["affichat_wc_cust_{$st}_enabled"]) ? 'yes' : 'no');
                 update_option("affichat_wc_cust_{$st}_template", wp_kses_post($_POST["affichat_wc_cust_{$st}_template"]));
             }
+            update_option('affichat_wc_completed_send_image', isset($_POST['affichat_wc_completed_send_image']) ? 'yes' : 'no');
 
             echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Pengaturan notifikasi WooCommerce berhasil disimpan.', 'affichat-wp') . '</p></div>';
         }
@@ -684,6 +718,223 @@ do_action('affichat_send_whatsapp', '081234567890', 'Pesan notifikasi via hook')
                     </div>
                 </div>
             </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Renders Tools, Contacts & Broadcast Management Page.
+     */
+    public static function render_tools_page() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        if (isset($_POST['affichat_wp_save_tools']) && check_admin_referer('affichat_wp_save_tools_action')) {
+            update_option('affichat_contacts_auto_sync', isset($_POST['affichat_contacts_auto_sync']) ? 'yes' : 'no');
+            update_option('affichat_store_name', sanitize_text_field($_POST['affichat_store_name'] ?? ''));
+            update_option('affichat_store_address', sanitize_textarea_field($_POST['affichat_store_address'] ?? ''));
+            update_option('affichat_store_latitude', (float) ($_POST['affichat_store_latitude'] ?? 0));
+            update_option('affichat_store_longitude', (float) ($_POST['affichat_store_longitude'] ?? 0));
+
+            update_option('affichat_wc_poll_enabled', isset($_POST['affichat_wc_poll_enabled']) ? 'yes' : 'no');
+            update_option('affichat_wc_poll_delay_days', max(0, min(30, (int) ($_POST['affichat_wc_poll_delay_days'] ?? 2))));
+            update_option('affichat_wc_poll_question', sanitize_text_field($_POST['affichat_wc_poll_question'] ?? ''));
+            update_option('affichat_wc_poll_options', sanitize_textarea_field($_POST['affichat_wc_poll_options'] ?? ''));
+
+            echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Pengaturan alat & kontak berhasil disimpan.', 'affichat-wp') . '</p></div>';
+        }
+
+        $wc_active    = class_exists('WooCommerce');
+        $poll_def_q   = __('Bagaimana pengalaman belanja kamu di {store_name}?', 'affichat-wp');
+        $poll_def_opts= "⭐⭐⭐⭐⭐ Sangat Puas\n⭐⭐⭐ Cukup Puas\n👎 Perlu Ditingkatkan";
+
+        $store_name   = get_option('affichat_store_name', get_bloginfo('name'));
+        $store_addr   = get_option('affichat_store_address', '');
+        $store_lat    = get_option('affichat_store_latitude', '-6.2088');
+        $store_lng    = get_option('affichat_store_longitude', '106.8456');
+
+        $poll_enabled = get_option('affichat_wc_poll_enabled', 'no');
+        $poll_delay   = (int) get_option('affichat_wc_poll_delay_days', 2);
+        $poll_question= get_option('affichat_wc_poll_question', $poll_def_q);
+        $poll_options = get_option('affichat_wc_poll_options', $poll_def_opts);
+        ?>
+        <div class="affichat-wrap">
+            <?php self::render_header('tools'); ?>
+
+            <div class="affichat-grid-2">
+                <!-- 1. Sinkronisasi Kontak -->
+                <div class="affichat-card">
+                    <div class="affichat-card-header">
+                        <h3><?php esc_html_e('Sinkronisasi Kontak Toko', 'affichat-wp'); ?></h3>
+                        <p><?php esc_html_e('Sinkronkan seluruh pelanggan WooCommerce ke buku kontak AffiChat WhatsApp.', 'affichat-wp'); ?></p>
+                    </div>
+
+                    <form method="post" action="">
+                        <?php wp_nonce_field('affichat_wp_save_tools_action'); ?>
+
+                        <div class="affichat-section-box">
+                            <label class="affichat-toggle-label">
+                                <input type="checkbox" name="affichat_contacts_auto_sync" value="yes" <?php checked(get_option('affichat_contacts_auto_sync', 'yes'), 'yes'); ?> />
+                                <strong><?php esc_html_e('Otomatis Simpan Pelanggan saat Checkout', 'affichat-wp'); ?></strong>
+                            </label>
+                            <p style="margin:4px 0 0 0; font-size:12px; color:var(--affi-text-muted);">
+                                <?php esc_html_e('Setiap ada pesanan baru, nama & nomor WhatsApp pembeli otomatis tersimpan ke buku kontak gateway.', 'affichat-wp'); ?>
+                            </p>
+                        </div>
+
+                        <div style="margin-top:16px;">
+                            <button type="button" id="affichat-btn-sync-contacts" class="affichat-btn affichat-btn-secondary" <?php echo !$wc_active ? 'disabled' : ''; ?>>
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                <span><?php esc_html_e('Sinkronkan Semua Kontak WooCommerce', 'affichat-wp'); ?></span>
+                            </button>
+                            <div id="affichat-sync-contacts-result" class="affichat-result-alert" style="display:none; margin-top:12px;"></div>
+                        </div>
+
+                        <div class="affichat-form-actions" style="margin-top:20px;">
+                            <button type="submit" name="affichat_wp_save_tools" class="affichat-btn affichat-btn-primary">
+                                <?php esc_html_e('Simpan Preferensi Kontak', 'affichat-wp'); ?>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 2. Pin Lokasi Toko -->
+                <div class="affichat-card">
+                    <div class="affichat-card-header">
+                        <h3><?php esc_html_e('Kirim Pin Lokasi Toko (GPS)', 'affichat-wp'); ?></h3>
+                        <p><?php esc_html_e('Kirimkan lokasi fisik toko atau cabang Anda dalam bentuk pin peta interaktif WhatsApp.', 'affichat-wp'); ?></p>
+                    </div>
+
+                    <form id="affichat-form-send-location">
+                        <div class="affichat-form-group">
+                            <label for="affichat_loc_to"><?php esc_html_e('Nomor WhatsApp Penerima', 'affichat-wp'); ?></label>
+                            <input type="text" id="affichat_loc_to" class="affichat-input" placeholder="081234567890" required />
+                        </div>
+
+                        <div class="affichat-form-group">
+                            <label for="affichat_store_name"><?php esc_html_e('Nama Toko / Tempat', 'affichat-wp'); ?></label>
+                            <input type="text" id="affichat_store_name" class="affichat-input" value="<?php echo esc_attr($store_name); ?>" placeholder="Nama Toko Anda" />
+                        </div>
+
+                        <div class="affichat-form-group">
+                            <label for="affichat_store_address"><?php esc_html_e('Alamat Lengkap', 'affichat-wp'); ?></label>
+                            <textarea id="affichat_store_address" class="affichat-textarea" rows="2" placeholder="Jl. Contoh No. 123, Jakarta"><?php echo esc_textarea($store_addr); ?></textarea>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div class="affichat-form-group">
+                                <label for="affichat_store_lat"><?php esc_html_e('Latitude (Lintang)', 'affichat-wp'); ?></label>
+                                <input type="text" id="affichat_store_lat" class="affichat-input" value="<?php echo esc_attr($store_lat); ?>" placeholder="-6.2088" required />
+                            </div>
+                            <div class="affichat-form-group">
+                                <label for="affichat_store_lng"><?php esc_html_e('Longitude (Bujur)', 'affichat-wp'); ?></label>
+                                <input type="text" id="affichat_store_lng" class="affichat-input" value="<?php echo esc_attr($store_lng); ?>" placeholder="106.8456" required />
+                            </div>
+                        </div>
+
+                        <div class="affichat-form-actions">
+                            <button type="submit" id="affichat-btn-send-loc" class="affichat-btn affichat-btn-primary">
+                                <?php esc_html_e('Kirim Lokasi Sekarang', 'affichat-wp'); ?>
+                            </button>
+                        </div>
+                        <div id="affichat-send-loc-result" class="affichat-result-alert" style="display:none; margin-top:12px;"></div>
+                    </form>
+                </div>
+
+                <!-- 3. Polling Kepuasan Pelanggan -->
+                <div class="affichat-card">
+                    <div class="affichat-card-header">
+                        <h3><?php esc_html_e('Polling & Survei Kepuasan Pelanggan', 'affichat-wp'); ?></h3>
+                        <p><?php esc_html_e('Kirim pesan polling interaktif otomatis ke WhatsApp pembeli setelah pesanan selesai.', 'affichat-wp'); ?></p>
+                    </div>
+
+                    <form method="post" action="">
+                        <?php wp_nonce_field('affichat_wp_save_tools_action'); ?>
+
+                        <div class="affichat-section-box">
+                            <label class="affichat-toggle-label">
+                                <input type="checkbox" name="affichat_wc_poll_enabled" value="yes" <?php checked($poll_enabled, 'yes'); ?> />
+                                <strong><?php esc_html_e('Aktifkan Polling Otomatis Pasca Selesai', 'affichat-wp'); ?></strong>
+                            </label>
+                            <p style="margin:4px 0 0 0; font-size:12px; color:var(--affi-text-muted);">
+                                <?php esc_html_e('Jadwalkan pesan polling kepuasan setelah status pesanan berubah menjadi Selesai (Completed).', 'affichat-wp'); ?>
+                            </p>
+                        </div>
+
+                        <div class="affichat-form-group" style="margin-top:14px;">
+                            <label for="affichat_wc_poll_delay_days"><?php esc_html_e('Kirim Setelah (Hari):', 'affichat-wp'); ?></label>
+                            <input type="number" id="affichat_wc_poll_delay_days" name="affichat_wc_poll_delay_days" class="affichat-input" min="0" max="30" value="<?php echo esc_attr($poll_delay); ?>" style="width:120px;" />
+                            <small class="affichat-help-text"><?php esc_html_e('0 = kirim langsung, 2 = 2 hari setelah pesanan selesai (direkomendasikan)', 'affichat-wp'); ?></small>
+                        </div>
+
+                        <div class="affichat-form-group">
+                            <label for="affichat_wc_poll_question"><?php esc_html_e('Pertanyaan Polling:', 'affichat-wp'); ?></label>
+                            <input type="text" id="affichat_wc_poll_question" name="affichat_wc_poll_question" class="affichat-input" value="<?php echo esc_attr($poll_question); ?>" required />
+                        </div>
+
+                        <div class="affichat-form-group">
+                            <label for="affichat_wc_poll_options"><?php esc_html_e('Pilihan Jawaban (Satu baris per opsi):', 'affichat-wp'); ?></label>
+                            <textarea id="affichat_wc_poll_options" name="affichat_wc_poll_options" class="affichat-textarea" rows="4" required><?php echo esc_textarea($poll_options); ?></textarea>
+                            <small class="affichat-help-text"><?php esc_html_e('Minimal 2 pilihan, maksimal 12 opsi sesuai ketentuan WhatsApp.', 'affichat-wp'); ?></small>
+                        </div>
+
+                        <div class="affichat-form-actions">
+                            <button type="submit" name="affichat_wp_save_tools" class="affichat-btn affichat-btn-primary">
+                                <?php esc_html_e('Simpan Pengaturan Polling', 'affichat-wp'); ?>
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr style="margin:20px 0; border:0; border-top:1px solid var(--affi-border);" />
+
+                    <div>
+                        <h4 style="margin:0 0 8px 0; font-size:13px;"><?php esc_html_e('Uji Coba Kirim Polling Instan:', 'affichat-wp'); ?></h4>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="affichat-test-poll-phone" class="affichat-input" placeholder="081234567890" style="flex:1;" />
+                            <button type="button" id="affichat-btn-test-poll" class="affichat-btn affichat-btn-secondary">
+                                <?php esc_html_e('Tes Polling', 'affichat-wp'); ?>
+                            </button>
+                        </div>
+                        <div id="affichat-test-poll-result" class="affichat-result-alert" style="display:none; margin-top:10px;"></div>
+                    </div>
+                </div>
+
+                <!-- 4. Siaran Cepat (Quick Broadcast) -->
+                <div class="affichat-card">
+                    <div class="affichat-card-header">
+                        <h3><?php esc_html_e('Siaran Cepat (Quick Broadcast)', 'affichat-wp'); ?></h3>
+                        <p><?php esc_html_e('Kirim pengumuman atau promo sekaligus ke beberapa nomor WhatsApp.', 'affichat-wp'); ?></p>
+                    </div>
+
+                    <form id="affichat-form-quick-broadcast">
+                        <div class="affichat-form-group">
+                            <label for="affichat_broadcast_numbers"><?php esc_html_e('Daftar Nomor WhatsApp (Pisahkan baris atau koma):', 'affichat-wp'); ?></label>
+                            <textarea id="affichat_broadcast_numbers" class="affichat-textarea" rows="4" placeholder="081234567890&#10;081298765432&#10;085712345678" required></textarea>
+                            <small class="affichat-help-text"><?php esc_html_e('Format nomor bebas (08... atau 628...).', 'affichat-wp'); ?></small>
+                        </div>
+
+                        <div class="affichat-form-group">
+                            <label for="affichat_broadcast_message"><?php esc_html_e('Isi Pesan Siaran:', 'affichat-wp'); ?></label>
+                            <textarea id="affichat_broadcast_message" class="affichat-textarea" rows="4" placeholder="Halo Pelanggan Setia *{store_name}*! Dapatkan promo spesial akhir bulan..." required></textarea>
+                            <small class="affichat-help-text"><?php esc_html_e('Variabel yang didukung: {store_name}', 'affichat-wp'); ?></small>
+                        </div>
+
+                        <div class="affichat-form-group">
+                            <label for="affichat_broadcast_image"><?php esc_html_e('URL Gambar Promosi (Opsional):', 'affichat-wp'); ?></label>
+                            <input type="url" id="affichat_broadcast_image" class="affichat-input" placeholder="https://domain.com/banner-promo.jpg" />
+                            <small class="affichat-help-text"><?php esc_html_e('Jika diisi, pesan akan dikirim sebagai gambar beserta caption teks di atas.', 'affichat-wp'); ?></small>
+                        </div>
+
+                        <div class="affichat-form-actions">
+                            <button type="submit" id="affichat-btn-broadcast" class="affichat-btn affichat-btn-primary">
+                                <?php esc_html_e('Kirim Siaran Sekarang', 'affichat-wp'); ?>
+                            </button>
+                        </div>
+                        <div id="affichat-broadcast-result" class="affichat-result-alert" style="display:none; margin-top:12px;"></div>
+                    </form>
+                </div>
+            </div>
         </div>
         <?php
     }

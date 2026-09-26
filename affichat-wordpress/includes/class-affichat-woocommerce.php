@@ -81,13 +81,14 @@ class AffiChat_WP_WC_Settings extends AffiChat_WP_WC_Settings_Parent {
                 update_option('affichat_wc_admin_template', wp_kses_post($_POST['affichat_wc_admin_template']));
             }
 
-            $statuses = ['pending', 'processing', 'completed', 'cancelled'];
+            $statuses = ['pending', 'processing', 'onhold', 'completed', 'cancelled', 'refunded'];
             foreach ($statuses as $st) {
                 update_option("affichat_wc_cust_{$st}_enabled", isset($_POST["affichat_wc_cust_{$st}_enabled"]) ? 'yes' : 'no');
                 if (isset($_POST["affichat_wc_cust_{$st}_template"])) {
                     update_option("affichat_wc_cust_{$st}_template", wp_kses_post($_POST["affichat_wc_cust_{$st}_template"]));
                 }
             }
+            update_option('affichat_wc_completed_send_image', isset($_POST['affichat_wc_completed_send_image']) ? 'yes' : 'no');
 
             if (function_exists('woocommerce_update_options')) {
                 woocommerce_update_options($this->get_settings());
@@ -108,9 +109,13 @@ class AffiChat_WP_WooCommerce {
         add_filter('woocommerce_get_settings_pages', [__CLASS__, 'register_wc_settings_page']);
         add_action('woocommerce_order_status_pending', [__CLASS__, 'trigger_customer_pending'], 10, 1);
         add_action('woocommerce_order_status_processing', [__CLASS__, 'trigger_customer_processing'], 10, 1);
+        add_action('woocommerce_order_status_on-hold', [__CLASS__, 'trigger_customer_onhold'], 10, 1);
         add_action('woocommerce_order_status_completed', [__CLASS__, 'trigger_customer_completed'], 10, 1);
         add_action('woocommerce_order_status_cancelled', [__CLASS__, 'trigger_customer_cancelled'], 10, 1);
+        add_action('woocommerce_order_status_refunded', [__CLASS__, 'trigger_customer_refunded'], 10, 1);
         add_action('woocommerce_checkout_order_processed', [__CLASS__, 'trigger_admin_new_order'], 10, 1);
+        add_action('woocommerce_order_actions', [__CLASS__, 'add_order_wa_actions']);
+        add_action('woocommerce_order_action_affichat_send_status_wa', [__CLASS__, 'handle_order_wa_action']);
     }
 
     public static function register_wc_settings_page($settings) {
@@ -129,8 +134,10 @@ class AffiChat_WP_WooCommerce {
         $admin_tpl_def = "🔔 *Pesanan Baru Masuk!*\n\nNomor: #{order_number}\nNama: {customer_name}\nTelepon: {customer_phone}\nTotal: {order_total}\nMetode: {payment_method}\n\n*Daftar Produk:*\n{items_list}\n\nMohon segera diproses via admin toko.";
         $pending_tpl_def = "Halo {customer_name},\n\nTerima kasih telah berbelanja di *{store_name}*! Pesanan Anda #{order_number} telah kami terima.\n\n*Rincian Pembayaran:*\nTotal: {order_total}\nMetode: {payment_method}\n\n*Produk:*\n{items_list}\n\nSilakan selesaikan pembayaran agar pesanan dapat segera diproses.";
         $processing_tpl_def = "Halo {customer_name},\n\nPembayaran untuk pesanan #{order_number} telah berhasil kami terima! Pesanan Anda sedang dipersiapkan oleh tim kami.\n\nTotal: {order_total}\nKami akan mengabari Anda kembali setelah pesanan dikirimkan.";
+        $onhold_tpl_def = "Halo {customer_name},\n\nPesanan #{order_number} di *{store_name}* sedang *Ditahan (On-Hold)* menunggu verifikasi pembayaran.\n\nTotal: {order_total}\nJika sudah melakukan pembayaran, mohon konfirmasi bukti transfer ke nomor ini.";
         $completed_tpl_def = "Halo {customer_name},\n\nPesanan #{order_number} Anda telah selesai diproses dan dikirimkan!\n\nTerima kasih telah berbelanja di *{store_name}*. Jika pesanan telah sampai dengan baik, kami akan sangat berterima kasih atas ulasan Anda.";
         $cancelled_tpl_def = "Halo {customer_name},\n\nPesanan #{order_number} di *{store_name}* telah dibatalkan. Jika Anda membutuhkan bantuan lebih lanjut, silakan hubungi tim kami.";
+        $refunded_tpl_def = "Halo {customer_name},\n\nPesanan #{order_number} di *{store_name}* telah kami kembalikan dananya (*Refunded*).\n\nTotal Pengembalian: {order_total}\nSilakan periksa saldo rekening/metode pembayaran Anda. Terima kasih!";
         ?>
         <div class="affichat-wrap <?php echo $is_wc_native_tab ? 'affichat-wc-tab-wrap' : ''; ?>" style="max-width:<?php echo $is_wc_native_tab ? '1000px' : '100%'; ?>;">
             <?php if ($is_wc_native_tab) : ?>
@@ -214,6 +221,21 @@ class AffiChat_WP_WooCommerce {
                     <textarea id="affichat_wc_cust_processing_template" name="affichat_wc_cust_processing_template" class="affichat-textarea" rows="4"><?php echo esc_textarea(get_option('affichat_wc_cust_processing_template', $processing_tpl_def)); ?></textarea>
                 </div>
 
+                <!-- Status On-Hold -->
+                <div class="affichat-section-box">
+                    <div class="affichat-section-box-header">
+                        <label class="affichat-toggle-label">
+                            <input type="checkbox" name="affichat_wc_cust_onhold_enabled" value="yes" <?php checked(get_option('affichat_wc_cust_onhold_enabled', 'no'), 'yes'); ?> />
+                            <strong><?php esc_html_e('Status On-Hold (Menunggu Verifikasi / Ditahan)', 'affichat-wp'); ?></strong>
+                        </label>
+                        <button type="button" class="affichat-btn-reset-single" data-reset-target="affichat_wc_cust_onhold_template" data-default="<?php echo esc_attr($onhold_tpl_def); ?>" title="<?php esc_attr_e('Reset template ini ke default', 'affichat-wp'); ?>">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span><?php esc_html_e('Reset', 'affichat-wp'); ?></span>
+                        </button>
+                    </div>
+                    <textarea id="affichat_wc_cust_onhold_template" name="affichat_wc_cust_onhold_template" class="affichat-textarea" rows="4"><?php echo esc_textarea(get_option('affichat_wc_cust_onhold_template', $onhold_tpl_def)); ?></textarea>
+                </div>
+
                 <!-- Status Completed -->
                 <div class="affichat-section-box">
                     <div class="affichat-section-box-header">
@@ -227,6 +249,12 @@ class AffiChat_WP_WooCommerce {
                         </button>
                     </div>
                     <textarea id="affichat_wc_cust_completed_template" name="affichat_wc_cust_completed_template" class="affichat-textarea" rows="4"><?php echo esc_textarea(get_option('affichat_wc_cust_completed_template', $completed_tpl_def)); ?></textarea>
+                    <div style="margin-top:10px;">
+                        <label class="affichat-toggle-label" style="display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" name="affichat_wc_completed_send_image" value="yes" <?php checked(get_option('affichat_wc_completed_send_image', 'no'), 'yes'); ?> />
+                            <span style="font-size:13px; color:var(--affi-text-muted);"><?php esc_html_e('Sertakan foto produk utama (send_image) pada notifikasi pesanan selesai', 'affichat-wp'); ?></span>
+                        </label>
+                    </div>
                 </div>
 
                 <!-- Status Cancelled -->
@@ -242,6 +270,21 @@ class AffiChat_WP_WooCommerce {
                         </button>
                     </div>
                     <textarea id="affichat_wc_cust_cancelled_template" name="affichat_wc_cust_cancelled_template" class="affichat-textarea" rows="3"><?php echo esc_textarea(get_option('affichat_wc_cust_cancelled_template', $cancelled_tpl_def)); ?></textarea>
+                </div>
+
+                <!-- Status Refunded -->
+                <div class="affichat-section-box">
+                    <div class="affichat-section-box-header">
+                        <label class="affichat-toggle-label">
+                            <input type="checkbox" name="affichat_wc_cust_refunded_enabled" value="yes" <?php checked(get_option('affichat_wc_cust_refunded_enabled', 'no'), 'yes'); ?> />
+                            <strong><?php esc_html_e('Status Refunded (Dana Dikembalikan)', 'affichat-wp'); ?></strong>
+                        </label>
+                        <button type="button" class="affichat-btn-reset-single" data-reset-target="affichat_wc_cust_refunded_template" data-default="<?php echo esc_attr($refunded_tpl_def); ?>" title="<?php esc_attr_e('Reset template ini ke default', 'affichat-wp'); ?>">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span><?php esc_html_e('Reset', 'affichat-wp'); ?></span>
+                        </button>
+                    </div>
+                    <textarea id="affichat_wc_cust_refunded_template" name="affichat_wc_cust_refunded_template" class="affichat-textarea" rows="3"><?php echo esc_textarea(get_option('affichat_wc_cust_refunded_template', $refunded_tpl_def)); ?></textarea>
                 </div>
 
                 <!-- Tag Chips Helper -->
@@ -284,12 +327,37 @@ class AffiChat_WP_WooCommerce {
         self::dispatch_customer_notification($order_id, 'processing');
     }
 
+    public static function trigger_customer_onhold($order_id) {
+        self::dispatch_customer_notification($order_id, 'onhold');
+    }
+
     public static function trigger_customer_completed($order_id) {
         self::dispatch_customer_notification($order_id, 'completed');
     }
 
     public static function trigger_customer_cancelled($order_id) {
         self::dispatch_customer_notification($order_id, 'cancelled');
+    }
+
+    public static function trigger_customer_refunded($order_id) {
+        self::dispatch_customer_notification($order_id, 'refunded');
+    }
+
+    public static function add_order_wa_actions($actions) {
+        $actions['affichat_send_status_wa'] = __('Kirim Ulang Notifikasi WhatsApp (AffiChat)', 'affichat-wp');
+        return $actions;
+    }
+
+    public static function handle_order_wa_action($order) {
+        if (!$order) {
+            return;
+        }
+        $status = method_exists($order, 'get_status') ? $order->get_status() : '';
+        if ($status) {
+            $order->delete_meta_data("_affichat_sent_{$status}");
+            $order->save();
+            self::dispatch_customer_notification($order->get_id(), $status);
+        }
     }
 
     public static function trigger_admin_new_order($order_id) {
@@ -332,7 +400,7 @@ class AffiChat_WP_WooCommerce {
     }
 
     private static function dispatch_customer_notification($order_id, $status) {
-        $default = ($status === 'cancelled') ? 'no' : 'yes';
+        $default = ($status === 'cancelled' || $status === 'onhold' || $status === 'refunded') ? 'no' : 'yes';
         $enabled = get_option("affichat_wc_cust_{$status}_enabled", $default);
         if ($enabled !== 'yes') {
             return;
@@ -363,7 +431,30 @@ class AffiChat_WP_WooCommerce {
 
         try {
             $api = new AffiChat_WP_API();
-            $result = $api->send_text($phone, $message);
+            $result = null;
+
+            // Optional: send product image for completed orders if enabled
+            if ($status === 'completed' && get_option('affichat_wc_completed_send_image', 'no') === 'yes') {
+                $items = method_exists($order, 'get_items') ? $order->get_items() : [];
+                foreach ($items as $item) {
+                    $product = is_object($item) && method_exists($item, 'get_product') ? $item->get_product() : null;
+                    if ($product && method_exists($product, 'get_image_id')) {
+                        $image_id = $product->get_image_id();
+                        if ($image_id) {
+                            $image_url = wp_get_attachment_image_url($image_id, 'full');
+                            if ($image_url) {
+                                $result = $api->send_image($phone, $image_url, $message);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($result === null) {
+                $result = $api->send_text($phone, $message);
+            }
+
             if (!empty($result['success'])) {
                 $order->update_meta_data($meta_key, current_time('mysql'));
                 $order->save();
@@ -483,6 +574,20 @@ class AffiChat_WP_WooCommerce {
                 'css'     => 'width:100%; min-height:120px;',
             ],
             [
+                'title'   => __('Pesanan On-Hold (Menunggu Verifikasi / Ditahan)', 'affichat-wp'),
+                'id'      => 'affichat_wc_cust_onhold_enabled',
+                'type'    => 'checkbox',
+                'default' => 'no',
+                'desc'    => __('Kirim notifikasi saat pesanan ditahan menunggu verifikasi.', 'affichat-wp'),
+            ],
+            [
+                'title'   => __('Template Pesan On-Hold', 'affichat-wp'),
+                'id'      => 'affichat_wc_cust_onhold_template',
+                'type'    => 'textarea',
+                'default' => "Halo {customer_name},\n\nPesanan #{order_number} di *{store_name}* sedang *Ditahan (On-Hold)* menunggu verifikasi pembayaran.\n\nTotal: {order_total}\nJika sudah melakukan pembayaran, mohon konfirmasi bukti transfer ke nomor ini.",
+                'css'     => 'width:100%; min-height:120px;',
+            ],
+            [
                 'title'   => __('Pesanan Completed (Selesai / Dikirim)', 'affichat-wp'),
                 'id'      => 'affichat_wc_cust_completed_enabled',
                 'type'    => 'checkbox',
@@ -497,6 +602,13 @@ class AffiChat_WP_WooCommerce {
                 'css'     => 'width:100%; min-height:120px;',
             ],
             [
+                'title'   => __('Kirim Foto Produk saat Selesai', 'affichat-wp'),
+                'id'      => 'affichat_wc_completed_send_image',
+                'type'    => 'checkbox',
+                'default' => 'no',
+                'desc'    => __('Kirim foto produk utama bersama pesan WhatsApp saat pesanan selesai.', 'affichat-wp'),
+            ],
+            [
                 'title'   => __('Pesanan Cancelled (Dibatalkan)', 'affichat-wp'),
                 'id'      => 'affichat_wc_cust_cancelled_enabled',
                 'type'    => 'checkbox',
@@ -508,6 +620,20 @@ class AffiChat_WP_WooCommerce {
                 'id'      => 'affichat_wc_cust_cancelled_template',
                 'type'    => 'textarea',
                 'default' => "Halo {customer_name},\n\nPesanan #{order_number} di *{store_name}* telah dibatalkan. Jika Anda membutuhkan bantuan lebih lanjut, silakan hubungi tim kami.",
+                'css'     => 'width:100%; min-height:100px;',
+            ],
+            [
+                'title'   => __('Pesanan Refunded (Dana Dikembalikan)', 'affichat-wp'),
+                'id'      => 'affichat_wc_cust_refunded_enabled',
+                'type'    => 'checkbox',
+                'default' => 'no',
+                'desc'    => __('Kirim notifikasi saat dana pesanan dikembalikan ke pembeli.', 'affichat-wp'),
+            ],
+            [
+                'title'   => __('Template Pesan Refunded', 'affichat-wp'),
+                'id'      => 'affichat_wc_cust_refunded_template',
+                'type'    => 'textarea',
+                'default' => "Halo {customer_name},\n\nPesanan #{order_number} di *{store_name}* telah kami kembalikan dananya (*Refunded*).\n\nTotal Pengembalian: {order_total}\nSilakan periksa saldo rekening/metode pembayaran Anda. Terima kasih!",
                 'css'     => 'width:100%; min-height:100px;',
             ],
             [

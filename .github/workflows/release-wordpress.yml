@@ -33,19 +33,21 @@ jobs:
         with:
           name: "AffiChat WordPress Plugin ${{ github.ref_name }}"
           body: |
-            ### Fitur & Perbaikan
+            ### Apa yang Baru di v1.0.10
 
-            - **Tampilan Modal Detail** - modal "Lihat detail" kini menampilkan banner, ikon, deskripsi lengkap, tab Changelog yang terformat rapi, dan informasi versi yang akurat.
-            - **Changelog Terformat** - teks changelog dirender sebagai HTML dengan heading, daftar bullet, dan blockquote. Tidak lagi tampil sebagai teks mentah.
-            - **Banner Baru** - gambar banner landscape resmi AffiChat (gelap, bersih, profesional) kini tampil di bagian atas modal detail plugin.
-            - **Update Otomatis Stabil** - proses "Perbarui Sekarang" tidak lagi menghapus folder plugin. Tidak perlu reinstall manual setelah update.
-            - **Link Detail di Kolom Plugin** - tombol "Detail" tersedia langsung di action links tanpa perlu scroll ke baris kedua.
+            - **Kirim Gambar Produk WooCommerce** - Notifikasi pesanan selesai (`completed`) kini dapat menyertakan foto produk utama secara otomatis melalui WhatsApp (`send_image`).
+            - **Kirim Pin Lokasi Toko (GPS)** - Bagikan pin peta interaktif WhatsApp lokasi fisik toko langsung dari tab Alat & Kontak WP-Admin (`send_location`).
+            - **Survei & Polling Kepuasan Pelanggan** - Otomatis jadwalkan polling interaktif WhatsApp pasca pesanan selesai dengan delay hari yang dapat disesuaikan (`send_poll`).
+            - **Sinkronisasi Kontak Toko** - Selaraskan daftar pelanggan WooCommerce ke buku kontak AffiChat WhatsApp dalam satu klik atau otomatis saat checkout (`sync_contact`).
+            - **Siaran Cepat (Quick Broadcast)** - Kirim pengumuman atau promo sekaligus ke daftar nomor WhatsApp dengan dukungan caption dan foto dari WP-Admin.
+            - **Notifikasi Status On-Hold & Refunded** - Dukungan pesan otomatis baru untuk pesanan yang ditahan atau dikembalikan dananya, serta tombol kirim ulang WhatsApp di detail order WooCommerce.
+            - **Modal Detail & Pembaruan Andal** - Tampilan detail plugin kini menampilkan changelog terformat rapi dengan update otomatis yang stabil.
 
             ### Cara Install / Perbarui
 
             Unduh **`affichat-wordpress.zip`** di bawah ini, lalu buka `wp-admin > Plugins > Add New Plugin > Upload Plugin`.
 
-            > **Catatan:** Jangan unduh `Source code (zip)` bawaan GitHub - file itu berisi seluruh monorepo. Hanya `affichat-wordpress.zip` yang perlu diunduh.
+            > **Catatan:** Jangan unduh `Source code (zip)` bawaan GitHub - file tersebut berisi seluruh monorepo. Hanya unduh file aset **`affichat-wordpress.zip`**.
 
             ### Kebutuhan Sistem
 

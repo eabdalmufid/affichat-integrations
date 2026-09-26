@@ -86,10 +86,7 @@ class AffiChat_WP_Updater {
                 '2x'      => $icon_url,
                 'default' => $icon_url,
             ],
-            'banners'       => [
-                'low'  => $logo_url,
-                'high' => $logo_url,
-            ],
+            'banners'       => [],
             'banners_rtl'   => [],
             'requires'      => '5.8',
             'tested'        => !empty($wp_ver) ? $wp_ver : '6.7',
@@ -248,7 +245,7 @@ class AffiChat_WP_Updater {
         }
 
         $remote = $this->get_remote_release();
-        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.9';
+        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.10';
         $version = ($remote && !empty($remote->version)) ? $remote->version : $current_version;
         $download_url = ($remote && !empty($remote->download_url)) ? $remote->download_url : '';
         $homepage = ($remote && !empty($remote->homepage)) ? $remote->homepage : 'https://chat.affidev.com';
@@ -259,8 +256,6 @@ class AffiChat_WP_Updater {
 
         $plugin_url  = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL : 'https://chat.affidev.com/wp-plugin/';
         $icon_url    = $plugin_url . 'assets/images/icon-256x256.png';
-        $banner_low  = $plugin_url . 'assets/images/banner-772x250.jpg';
-        $banner_high = $plugin_url . 'assets/images/banner-1544x500.jpg';
 
         $info = new stdClass();
         $info->name           = 'AffiChat - WhatsApp Gateway for WordPress & WooCommerce';
@@ -282,10 +277,7 @@ class AffiChat_WP_Updater {
             '2x'      => $icon_url,
             'default' => $icon_url,
         ];
-        $info->banners        = [
-            'low'  => $banner_low,
-            'high' => $banner_high,
-        ];
+        $info->banners        = [];
 
         $changelog_raw  = ($remote && !empty($remote->changelog)) ? $remote->changelog : sprintf(__('Versi %s telah dirilis.', 'affichat-wp'), esc_html($version));
         $changelog_html = $this->parse_markdown_to_html($changelog_raw);
@@ -295,11 +287,12 @@ class AffiChat_WP_Updater {
                 '<p>' . esc_html__('Integrasi WhatsApp Gateway resmi untuk WordPress & WooCommerce. Kirim notifikasi pesanan otomatis, kirim pesan cepat langsung dari dashboard admin, dan tanggapi pengisian formulir prospek secara instan.', 'affichat-wp') . '</p>' .
                 '<h4 style="margin: 16px 0 8px;">' . esc_html__('Fitur Utama:', 'affichat-wp') . '</h4>' .
                 '<ul style="margin: 8px 0 16px 20px; list-style-type: disc;">' .
-                    '<li><strong>' . esc_html__('Notifikasi WooCommerce Otomatis:', 'affichat-wp') . '</strong> ' . esc_html__('Kirim alert ke WhatsApp pembeli saat status pesanan Pending, Processing, atau Completed.', 'affichat-wp') . '</li>' .
-                    '<li><strong>' . esc_html__('Notifikasi WhatsApp Admin Toko:', 'affichat-wp') . '</strong> ' . esc_html__('Dapatkan pemberitahuan seketika saat ada pesanan baru masuk lengkap dengan rincian total dan produk.', 'affichat-wp') . '</li>' .
-                    '<li><strong>' . esc_html__('Pesan Cepat (Quick Send):', 'affichat-wp') . '</strong> ' . esc_html__('Kirim chat WhatsApp ke nomor pelanggan langsung dari menu AffiChat di WP-Admin.', 'affichat-wp') . '</li>' .
+                    '<li><strong>' . esc_html__('Notifikasi WooCommerce Otomatis:', 'affichat-wp') . '</strong> ' . esc_html__('Kirim alert ke WhatsApp pembeli saat status pesanan Pending, Processing, On-Hold, Completed, atau Refunded.', 'affichat-wp') . '</li>' .
+                    '<li><strong>' . esc_html__('Kirim Gambar & Dokumen:', 'affichat-wp') . '</strong> ' . esc_html__('Sertakan foto produk otomatis saat pesanan selesai dan kirim dokumen pendukung.', 'affichat-wp') . '</li>' .
+                    '<li><strong>' . esc_html__('Polling Kepuasan Pelanggan:', 'affichat-wp') . '</strong> ' . esc_html__('Kirim survey bintang/rating WhatsApp interaktif setelah pesanan selesai.', 'affichat-wp') . '</li>' .
+                    '<li><strong>' . esc_html__('Kirim Pin Lokasi Toko:', 'affichat-wp') . '</strong> ' . esc_html__('Kirim koordinat GPS peta toko resmi ke pembeli langsung dari WP-Admin.', 'affichat-wp') . '</li>' .
+                    '<li><strong>' . esc_html__('Sinkronisasi Kontak & Broadcast:', 'affichat-wp') . '</strong> ' . esc_html__('Sinkronkan kontak pembeli ke AffiChat dan kirim pesan broadcast multi-nomor.', 'affichat-wp') . '</li>' .
                     '<li><strong>' . esc_html__('Integrasi Form Builder:', 'affichat-wp') . '</strong> ' . esc_html__('Dukungan penuh untuk Elementor Form, JetFormBuilder, Contact Form 7, WPForms, dan Fluent Forms.', 'affichat-wp') . '</li>' .
-                    '<li><strong>' . esc_html__('Variabel Template Dinamis:', 'affichat-wp') . '</strong> ' . esc_html__('Personalisasi pesan dengan tag {customer_name}, {order_number}, {order_total}, {payment_method}, dll.', 'affichat-wp') . '</li>' .
                     '<li><strong>' . esc_html__('Arsitektur Ringan & Aman:', 'affichat-wp') . '</strong> ' . esc_html__('Kompatibel dengan WooCommerce HPOS dan proteksi anti-duplikasi pengiriman.', 'affichat-wp') . '</li>' .
                 '</ul>',
 

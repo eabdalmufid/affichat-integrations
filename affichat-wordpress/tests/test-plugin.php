@@ -6,7 +6,7 @@
  */
 
 define('ABSPATH', true);
-define('AFFICHAT_WP_VERSION', '1.0.9');
+define('AFFICHAT_WP_VERSION', '1.0.10');
 define('AFFICHAT_WP_PATH', dirname(__DIR__) . '/');
 define('AFFICHAT_WP_URL', 'http://example.com/wp-content/plugins/affichat-wordpress/');
 define('AFFICHAT_WP_BASENAME', 'affichat-wordpress/affichat-wordpress.php');
@@ -237,6 +237,13 @@ class Mock_WC_Item {
     public function get_name() { return $this->name; }
     public function get_quantity() { return $this->qty; }
     public function get_total() { return $this->total; }
+    public function get_product() { return new Mock_WC_Product(101); }
+}
+
+class Mock_WC_Product {
+    private $image_id;
+    public function __construct($image_id = 99) { $this->image_id = $image_id; }
+    public function get_image_id() { return $this->image_id; }
 }
 
 class Mock_WC_DateTime {
@@ -281,6 +288,7 @@ class WC_Order {
     public function get_items() { return $this->items; }
     public function get_meta($key) { return isset($this->meta[$key]) ? $this->meta[$key] : ''; }
     public function update_meta_data($key, $val) { $this->meta[$key] = $val; }
+    public function delete_meta_data($key) { unset($this->meta[$key]); }
     public function save() { return true; }
 }
 
@@ -289,10 +297,26 @@ function wc_get_order($id) {
     return isset($GLOBALS['mock_orders_registry'][$id]) ? $GLOBALS['mock_orders_registry'][$id] : null;
 }
 
+if (!defined('DAY_IN_SECONDS')) {
+    define('DAY_IN_SECONDS', 86400);
+}
+function wp_schedule_single_event($timestamp, $hook, $args = []) { return true; }
+function wp_get_attachment_image_url($id, $size = 'thumbnail') { return 'https://toko-demo.id/product-' . $id . '.jpg'; }
+function get_users($args = []) {
+    return [
+        (object) ['ID' => 101, 'first_name' => 'Budi', 'last_name' => 'Pratama', 'display_name' => 'Budi Pratama'],
+    ];
+}
+function get_user_meta($id, $key, $single = false) {
+    if ($key === 'billing_phone') return '081234567890';
+    return '';
+}
+
 // Load plugin components
 require_once AFFICHAT_WP_PATH . 'includes/class-affichat-api.php';
 require_once AFFICHAT_WP_PATH . 'includes/class-affichat-tags.php';
 require_once AFFICHAT_WP_PATH . 'includes/class-affichat-forms.php';
+require_once AFFICHAT_WP_PATH . 'includes/class-affichat-contacts.php';
 require_once AFFICHAT_WP_PATH . 'includes/class-affichat-woocommerce.php';
 require_once AFFICHAT_WP_PATH . 'includes/class-affichat-admin.php';
 
@@ -530,9 +554,93 @@ $mock_meta = ['<a href="plugin-install.php?tab=plugin-information&plugin=afficha
 $fixed_meta = $updater->plugin_row_meta($mock_meta, 'affichat-wordpress/affichat-wordpress.php');
 it('Updater plugin_row_meta normalizes thickbox link to affichat-wordpress slug', strpos($fixed_meta[0], 'plugin=affichat-wordpress') !== false);
 
-echo "\n=================================================================\n";
-echo "SUMMARY: Total Asserts: {$total_asserts} | Passed: {$passed_asserts} | Failed: {$failed_asserts}\n";
-echo "=================================================================\n";
+$api = new AffiChat_WP_API('test_key', 'default', 'https://chat.affidev.com');
+$img_res = $api->send_image('081234567890', 'https://example.com/product.jpg', 'Produk Hoodie');
+it('API: send_image returns success', $img_res['success'] === true);
+$last_call = end($GLOBALS['mock_http_calls']);
+it('API: send_image hits /api/send-image endpoint', strpos($last_call['url'], '/api/send-image') !== false);
+
+$doc_res = $api->send_document('081234567890', 'https://example.com/invoice.pdf', 'invoice-ORD2001.pdf');
+it('API: send_document returns success', $doc_res['success'] === true);
+$last_call = end($GLOBALS['mock_http_calls']);
+it('API: send_document hits /api/send-document endpoint', strpos($last_call['url'], '/api/send-document') !== false);
+
+$loc_res = $api->send_location('081234567890', -6.2088, 106.8456, 'Toko Utama', 'Jl. Sudirman No. 1');
+it('API: send_location returns success', $loc_res['success'] === true);
+$last_call = end($GLOBALS['mock_http_calls']);
+it('API: send_location hits /api/send-location endpoint', strpos($last_call['url'], '/api/send-location') !== false);
+
+$poll_res = $api->send_poll('081234567890', 'Puas belanja di sini?', ['Puas', 'Cukup', 'Kurang']);
+it('API: send_poll returns success', $poll_res['success'] === true);
+$last_call = end($GLOBALS['mock_http_calls']);
+it('API: send_poll hits /api/send-poll endpoint', strpos($last_call['url'], '/api/send-poll') !== false);
+
+$sync_res = $api->sync_contact('081234567890', 'Ahmad Fauzi', ['customer']);
+it('API: sync_contact returns success', $sync_res['success'] === true);
+$last_call = end($GLOBALS['mock_http_calls']);
+it('API: sync_contact hits /api/contacts endpoint', strpos($last_call['url'], '/api/contacts') !== false);
+
+it('AffiChat_WP_Contacts class exists', class_exists('AffiChat_WP_Contacts'));
+
+$GLOBALS['current_user_can_manage_options'] = true;
+$GLOBALS['nonce_valid'] = true;
+
+$GLOBALS['last_ajax_response'] = null;
+AffiChat_WP_Contacts::ajax_sync_contacts();
+it('AffiChat_WP_Contacts::ajax_sync_contacts succeeds', !empty($GLOBALS['last_ajax_response']['success']));
+
+$_POST['to'] = '081234567890';
+$_POST['latitude'] = '-6.2088';
+$_POST['longitude'] = '106.8456';
+$_POST['name'] = 'AffiChat Store';
+$_POST['address'] = 'Jakarta';
+$GLOBALS['last_ajax_response'] = null;
+AffiChat_WP_Contacts::ajax_send_location();
+it('AffiChat_WP_Contacts::ajax_send_location succeeds', !empty($GLOBALS['last_ajax_response']['success']));
+
+$_POST['order_id'] = 0;
+$_POST['phone'] = '081234567890';
+$GLOBALS['last_ajax_response'] = null;
+AffiChat_WP_Contacts::ajax_send_satisfaction_poll();
+it('AffiChat_WP_Contacts::ajax_send_satisfaction_poll succeeds', !empty($GLOBALS['last_ajax_response']['success']));
+
+$_POST['numbers'] = "081234567890\n081298765432";
+$_POST['message'] = "Halo {store_name}, promo baru!";
+$_POST['image_url'] = "";
+$GLOBALS['last_ajax_response'] = null;
+AffiChat_WP_Contacts::ajax_quick_broadcast();
+it('AffiChat_WP_Contacts::ajax_quick_broadcast succeeds', !empty($GLOBALS['last_ajax_response']['success']) && $GLOBALS['last_ajax_response']['data']['sent'] === 2);
+
+$order5001 = new WC_Order(5001);
+$GLOBALS['mock_orders_registry'][5001] = $order5001;
+
+$GLOBALS['mock_options']['affichat_wc_cust_onhold_enabled'] = 'yes';
+$GLOBALS['mock_options']['affichat_wc_cust_onhold_template'] = 'OnHold #{order_number}';
+$GLOBALS['mock_options']['affichat_wc_cust_refunded_enabled'] = 'yes';
+$GLOBALS['mock_options']['affichat_wc_cust_refunded_template'] = 'Refunded #{order_number}';
+
+$call_count_before = count($GLOBALS['mock_http_calls']);
+AffiChat_WP_WooCommerce::trigger_customer_onhold(5001);
+it('Customer receives on-hold notification', count($GLOBALS['mock_http_calls']) === $call_count_before + 1);
+
+AffiChat_WP_WooCommerce::trigger_customer_refunded(5001);
+it('Customer receives refunded notification', count($GLOBALS['mock_http_calls']) === $call_count_before + 2);
+
+$order6001 = new WC_Order(6001);
+$GLOBALS['mock_orders_registry'][6001] = $order6001;
+$GLOBALS['mock_options']['affichat_wc_completed_send_image'] = 'yes';
+$GLOBALS['mock_options']['affichat_wc_cust_completed_enabled'] = 'yes';
+$GLOBALS['mock_options']['affichat_wc_cust_completed_template'] = 'Completed #{order_number}';
+
+$call_count_before = count($GLOBALS['mock_http_calls']);
+AffiChat_WP_WooCommerce::trigger_customer_completed(6001);
+$last_completed_call = end($GLOBALS['mock_http_calls']);
+it('Customer completed notification sends image when option enabled', strpos($last_completed_call['url'], '/api/send-image') !== false);
+
+$actions = AffiChat_WP_WooCommerce::add_order_wa_actions([]);
+it('WooCommerce order actions includes affichat_send_status_wa', isset($actions['affichat_send_status_wa']));
+
+echo "\nSummary: Total Asserts: {$total_asserts} | Passed: {$passed_asserts} | Failed: {$failed_asserts}\n";
 
 exit($failed_asserts === 0 ? 0 : 1);
 

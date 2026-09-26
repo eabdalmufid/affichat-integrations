@@ -203,6 +203,157 @@
             });
         });
 
+        $('#affichat-btn-sync-contacts').on('click', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var $res = $('#affichat-sync-contacts-result');
+            var originalText = $btn.find('span').text();
+
+            $btn.prop('disabled', true).find('span').text('Menyinkronkan Kontak...');
+            $res.removeClass('success error').hide().text('');
+
+            $.ajax({
+                url: affichat_wp_vars.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'affichat_sync_contacts',
+                    nonce: affichat_wp_vars.nonce
+                },
+                success: function (res) {
+                    $btn.prop('disabled', false).find('span').text(originalText);
+                    if (res && res.success) {
+                        $res.addClass('success').text(res.data.message || 'Sinkronisasi berhasil!').fadeIn();
+                        if (window.showToast) window.showToast('Sukses', res.data.message, 'success');
+                    } else {
+                        var msg = (res && res.data && res.data.message) ? res.data.message : 'Gagal menyinkronkan kontak.';
+                        $res.addClass('error').text(msg).fadeIn();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $btn.prop('disabled', false).find('span').text(originalText);
+                    $res.addClass('error').text('AJAX Error: ' + (error || status)).fadeIn();
+                }
+            });
+        });
+
+        $('#affichat-form-send-location').on('submit', function (e) {
+            e.preventDefault();
+            var $btn = $('#affichat-btn-send-loc');
+            var $res = $('#affichat-send-loc-result');
+            var originalText = $btn.text();
+
+            $btn.prop('disabled', true).text('Mengirim Lokasi...');
+            $res.removeClass('success error').hide().text('');
+
+            $.ajax({
+                url: affichat_wp_vars.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'affichat_send_location',
+                    nonce: affichat_wp_vars.nonce,
+                    to: $('#affichat_loc_to').val(),
+                    name: $('#affichat_store_name').val(),
+                    address: $('#affichat_store_address').val(),
+                    latitude: $('#affichat_store_lat').val(),
+                    longitude: $('#affichat_store_lng').val()
+                },
+                success: function (res) {
+                    $btn.prop('disabled', false).text(originalText);
+                    if (res && res.success) {
+                        $res.addClass('success').text(res.data.message || 'Lokasi berhasil dikirim!').fadeIn();
+                        if (window.showToast) window.showToast('Sukses', res.data.message, 'success');
+                    } else {
+                        var msg = (res && res.data && res.data.message) ? res.data.message : 'Gagal mengirim lokasi.';
+                        $res.addClass('error').text(msg).fadeIn();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $btn.prop('disabled', false).text(originalText);
+                    $res.addClass('error').text('AJAX Error: ' + (error || status)).fadeIn();
+                }
+            });
+        });
+
+        $('#affichat-btn-test-poll').on('click', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var $res = $('#affichat-test-poll-result');
+            var phone = $('#affichat-test-poll-phone').val();
+            var originalText = $btn.text();
+
+            if (!phone || !phone.trim()) {
+                $res.addClass('error').text('Silakan masukkan nomor WhatsApp tujuan.').fadeIn();
+                return;
+            }
+
+            $btn.prop('disabled', true).text('Mengirim...');
+            $res.removeClass('success error').hide().text('');
+
+            $.ajax({
+                url: affichat_wp_vars.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'affichat_send_satisfaction_poll',
+                    nonce: affichat_wp_vars.nonce,
+                    phone: phone
+                },
+                success: function (res) {
+                    $btn.prop('disabled', false).text(originalText);
+                    if (res && res.success) {
+                        $res.addClass('success').text(res.data.message || 'Polling berhasil dikirim!').fadeIn();
+                        if (window.showToast) window.showToast('Sukses', res.data.message, 'success');
+                    } else {
+                        var msg = (res && res.data && res.data.message) ? res.data.message : 'Gagal mengirim polling.';
+                        $res.addClass('error').text(msg).fadeIn();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $btn.prop('disabled', false).text(originalText);
+                    $res.addClass('error').text('AJAX Error: ' + (error || status)).fadeIn();
+                }
+            });
+        });
+
+        $('#affichat-form-quick-broadcast').on('submit', function (e) {
+            e.preventDefault();
+            var $btn = $('#affichat-btn-broadcast');
+            var $res = $('#affichat-broadcast-result');
+            var originalText = $btn.text();
+
+            $btn.prop('disabled', true).text('Mengirim Siaran...');
+            $res.removeClass('success error').hide().text('');
+
+            $.ajax({
+                url: affichat_wp_vars.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'affichat_quick_broadcast',
+                    nonce: affichat_wp_vars.nonce,
+                    numbers: $('#affichat_broadcast_numbers').val(),
+                    message: $('#affichat_broadcast_message').val(),
+                    image_url: $('#affichat_broadcast_image').val()
+                },
+                success: function (res) {
+                    $btn.prop('disabled', false).text(originalText);
+                    if (res && res.success) {
+                        $res.addClass('success').text(res.data.message || 'Siaran berhasil dikirim!').fadeIn();
+                        if (window.showToast) window.showToast('Sukses', res.data.message, 'success');
+                    } else {
+                        var msg = (res && res.data && res.data.message) ? res.data.message : 'Gagal mengirim siaran.';
+                        $res.addClass('error').text(msg).fadeIn();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $btn.prop('disabled', false).text(originalText);
+                    $res.addClass('error').text('AJAX Error: ' + (error || status)).fadeIn();
+                }
+            });
+        });
+
         window.showToast = function (title, message, type) {
             type = type || 'success';
             var $container = $('#affichat-toast-container');
