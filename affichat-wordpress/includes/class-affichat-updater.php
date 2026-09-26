@@ -21,7 +21,7 @@ class AffiChat_WP_Updater {
     /**
      * Transient cache key for release metadata.
      */
-    const CACHE_KEY = 'affichat_wp_release_info';
+    const CACHE_KEY = 'affichat_wp_release_info_v2';
 
     /**
      * Cache lifetime for remote version checks.
@@ -248,7 +248,7 @@ class AffiChat_WP_Updater {
         }
 
         $remote = $this->get_remote_release();
-        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.8';
+        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.9';
         $version = ($remote && !empty($remote->version)) ? $remote->version : $current_version;
         $download_url = ($remote && !empty($remote->download_url)) ? $remote->download_url : '';
         $homepage = ($remote && !empty($remote->homepage)) ? $remote->homepage : 'https://chat.affidev.com';

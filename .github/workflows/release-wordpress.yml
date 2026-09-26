@@ -33,29 +33,26 @@ jobs:
         with:
           name: "AffiChat WordPress Plugin ${{ github.ref_name }}"
           body: |
-            ## AffiChat for WordPress & WooCommerce
+            ### Fitur & Perbaikan
 
-            ### Apa yang Baru di Versi Ini
+            - **Tampilan Modal Detail** - modal "Lihat detail" kini menampilkan banner, ikon, deskripsi lengkap, tab Changelog yang terformat rapi, dan informasi versi yang akurat.
+            - **Changelog Terformat** - teks changelog dirender sebagai HTML dengan heading, daftar bullet, dan blockquote. Tidak lagi tampil sebagai teks mentah.
+            - **Banner Baru** - gambar banner landscape resmi AffiChat (gelap, bersih, profesional) kini tampil di bagian atas modal detail plugin.
+            - **Update Otomatis Stabil** - proses "Perbarui Sekarang" tidak lagi menghapus folder plugin. Tidak perlu reinstall manual setelah update.
+            - **Link Detail di Kolom Plugin** - tombol "Detail" tersedia langsung di action links tanpa perlu scroll ke baris kedua.
 
-            - **Modal Detail Plugin** — tampilan "Lihat detail" kini menampilkan informasi versi, changelog, dan banner gambar dengan benar.
-            - **Changelog Terformat** — teks changelog sekarang dirender sebagai HTML (heading, list, blockquote) bukan teks mentah.
-            - **Banner Plugin** — gambar banner landscape resmi AffiChat kini muncul di header modal detail.
-            - **Link Detail di Action Links** — tombol "Detail" baru tersedia langsung di kolom plugin tanpa perlu scroll ke bawah.
-            - **Fix Auto-Update** — proses "Perbarui Sekarang" tidak lagi menghapus folder plugin setelah update.
+            ### Cara Install / Perbarui
 
-            ### Cara Instalasi / Pembaruan Manual
+            Unduh **`affichat-wordpress.zip`** di bawah ini, lalu buka `wp-admin > Plugins > Add New Plugin > Upload Plugin`.
 
-            Unduh file **`affichat-wordpress.zip`** di bawah ini, lalu buka `wp-admin > Plugins > Add New Plugin > Upload Plugin`.
+            > **Catatan:** Jangan unduh `Source code (zip)` bawaan GitHub - file itu berisi seluruh monorepo. Hanya `affichat-wordpress.zip` yang perlu diunduh.
 
-            > **Penting:** Jangan unduh `Source code (zip)` bawaan GitHub karena berisi seluruh monorepo. Gunakan hanya `affichat-wordpress.zip` di atas.
-
-            ### Syarat Sistem
+            ### Kebutuhan Sistem
 
             - WordPress 5.8 atau lebih baru
             - PHP 7.4 atau lebih baru
-            - WooCommerce 5.0+ (opsional, untuk notifikasi pesanan)
+            - WooCommerce 5.0+ (opsional)
           files: affichat-wordpress.zip
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
