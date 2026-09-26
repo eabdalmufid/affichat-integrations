@@ -182,7 +182,7 @@ class AffiChat_WP_Updater {
     }
 
     /**
-     * Normalizes the "View details" Thickbox modal link in the plugins list table.
+     * Replaces the WordPress.org "View details" link with our own Thickbox modal pointing to affichat-wordpress slug.
      *
      * @param array  $meta Plugin row meta links.
      * @param string $file Plugin file basename.
@@ -190,14 +190,35 @@ class AffiChat_WP_Updater {
      */
     public function plugin_row_meta($meta, $file) {
         $basename = defined('AFFICHAT_WP_BASENAME') ? AFFICHAT_WP_BASENAME : 'affichat-wordpress/affichat-wordpress.php';
-        if ($file === $basename && is_array($meta)) {
-            foreach ($meta as &$item) {
-                if (strpos($item, 'plugin-install.php?tab=plugin-information') !== false) {
-                    $item = preg_replace('/plugin=[^&"]+/', 'plugin=affichat-wordpress', $item);
-                }
+        if ($file !== $basename || !is_array($meta)) {
+            return $meta;
+        }
+
+        $clean = [];
+        $has_view_details = false;
+
+        foreach ($meta as $item) {
+            if (strpos($item, 'plugin-install.php?tab=plugin-information') !== false) {
+                $has_view_details = true;
+                // Replace whatever slug WordPress generated with our canonical slug.
+                $clean[] = preg_replace('/plugin=[^&"]+/', 'plugin=affichat-wordpress', $item);
+            } else {
+                $clean[] = $item;
             }
         }
-        return $meta;
+
+        if (!$has_view_details && function_exists('admin_url')) {
+            $url = add_query_arg([
+                'tab'       => 'plugin-information',
+                'plugin'    => 'affichat-wordpress',
+                'TB_iframe' => 'true',
+                'width'     => '772',
+                'height'    => '600',
+            ], admin_url('plugin-install.php'));
+            $clean[] = '<a href="' . esc_url($url) . '" class="thickbox open-plugin-details-modal" aria-label="' . esc_attr__('Lihat detail AffiChat', 'affichat-wp') . '">' . esc_html__('Lihat detail', 'affichat-wp') . '</a>';
+        }
+
+        return $clean;
     }
 
     /**
