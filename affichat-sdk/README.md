@@ -1,8 +1,13 @@
 # @affidev/affichat
 
-Official TypeScript & JavaScript SDK for the **AffiChat WhatsApp Gateway** REST API.
+[![npm version](https://img.shields.io/npm/v/@affidev/affichat.svg?color=00A884)](https://www.npmjs.com/package/@affidev/affichat)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Zero runtime dependencies. Built on native `fetch` (compatible with Node.js 18+, Bun, Deno, Next.js, and modern browsers).
+Official TypeScript and JavaScript SDK for the **AffiChat WhatsApp Gateway** REST API.
+
+Zero runtime dependencies. Built on native `fetch` and compatible with Node.js 18+, Bun, Deno, Next.js, and modern browser environments.
+
+---
 
 ## Installation
 
@@ -10,54 +15,51 @@ Zero runtime dependencies. Built on native `fetch` (compatible with Node.js 18+,
 npm install @affidev/affichat
 ```
 
+---
+
 ## Quick Start
 
 ```typescript
 import { AffiChat } from "@affidev/affichat";
 
-const affi = new AffiChat({
+const client = new AffiChat({
   apiKey: "YOUR_API_KEY",
   baseUrl: "https://chat.affidev.com", // Optional, defaults to production
 });
 
-// 1. Check API Key & Quota Status
-const keyInfo = await affi.utilities.checkApiKey();
+// Check API key and quota
+const keyInfo = await client.utilities.checkApiKey();
 console.log("Plan:", keyInfo.data.plan, "Remaining:", keyInfo.data.remainingMessages);
 
-// 2. Send Text Message
-await affi.messages.sendText({
-  sessionId: "session1",
+// Send text message
+await client.messages.sendText({
+  sessionId: "default",
   to: "6281234567890",
-  text: "Halo! Pesanan Anda telah kami proses.",
+  text: "Halo, pesanan Anda sedang kami siapkan.",
 });
 
-// 3. Send Image with Caption
-await affi.messages.sendImage({
-  sessionId: "session1",
+// Send image with caption
+await client.messages.sendImage({
+  sessionId: "default",
   to: "6281234567890",
   imageUrl: "https://example.com/promo.jpg",
-  caption: "Katalog Promo Spesial Minggu Ini",
+  caption: "Katalog Promo Mingguan",
 });
 
-// 4. Send Sticker
-await affi.messages.sendSticker({
-  sessionId: "session1",
-  to: "6281234567890",
-  stickerUrl: "https://example.com/sticker.webp",
-});
-
-// 5. Create Bulk Broadcast Campaign
-const campaign = await affi.broadcast.sendBulk({
-  sessionId: "session1",
+// Dispatch bulk broadcast campaign
+const campaign = await client.broadcast.sendBulk({
+  sessionId: "default",
   recipients: ["6281234567890", "6289876543210"],
-  message: "Promo eksklusif pelanggan setia!",
+  message: "Pengumuman jadwal operasional toko.",
 });
 console.log("Campaign ID:", campaign.data?.id);
 
-// 6. List WhatsApp Groups
-const groups = await affi.groups.list("session1");
-console.log("Joined groups:", groups.data.length);
+// List WhatsApp groups
+const groups = await client.groups.list("default");
+console.log("Joined groups count:", groups.data.length);
 ```
+
+---
 
 ## API Methods (19 Endpoints)
 
@@ -88,56 +90,67 @@ console.log("Joined groups:", groups.data.length);
 - `checkApiKey()` — `GET /api/key/check`
 - `checkProfile(params)` — `GET /api/profile`
 
+---
+
 ## Error Handling
+
+The SDK exposes custom error types for distinct API failure modes:
 
 ```typescript
 import { AffiChat, QuotaExceededError, AuthenticationError } from "@affidev/affichat";
 
 try {
-  await affi.messages.sendText({ sessionId: "s1", to: "628...", text: "Halo" });
+  await client.messages.sendText({
+    sessionId: "default",
+    to: "6281234567890",
+    text: "Pesan penting",
+  });
 } catch (error) {
   if (error instanceof QuotaExceededError) {
-    console.error("Batas kuota pesan habis. Silakan perpanjang paket.");
+    console.error("Quota limit reached. Please upgrade your active plan.");
   } else if (error instanceof AuthenticationError) {
-    console.error("API Key tidak valid atau dinonaktifkan.");
+    console.error("Invalid or inactive API key.");
   }
 }
 ```
 
-## Handling Webhooks
+---
 
-To receive and verify real-time events (`messages.upsert`, `session.status`):
+## Webhook Signature Verification
+
+To process real-time incoming events (`messages.upsert`, `session.status`) securely:
 
 ```typescript
 import { AffiChatWebhook } from "@affidev/affichat";
 import express from "express";
 
 const app = express();
-app.use(express.raw({ type: "application/json" })); // keep raw buffer for signature verification
+
+// Raw body is required for HMAC-SHA256 signature verification
+app.use(express.raw({ type: "application/json" }));
 
 app.post("/webhook", (req, res) => {
   const signature = req.headers["x-affichat-signature"] as string;
-  const secret = process.env.AFFICHAT_WEBHOOK_SECRET!;
+  const secret    = process.env.AFFICHAT_WEBHOOK_SECRET!;
 
-  // 1. Verify cryptographic HMAC-SHA256 signature
   const isValid = AffiChatWebhook.verifySignature(req.body, signature, secret);
   if (!isValid) {
     return res.status(401).json({ error: "Invalid signature" });
   }
 
-  // 2. Parse event payload
   const event = AffiChatWebhook.parseEvent(req.body.toString("utf8"));
-  console.log(`Received event ${event.event} for session ${event.sessionId}`);
 
   if (event.event === "messages.upsert") {
-    console.log("Message:", event.data);
+    const message = event.data;
+    console.log("Incoming message:", message);
   }
 
   return res.json({ status: "success" });
 });
 ```
 
+---
+
 ## License
 
-MIT
-
+MIT License.

@@ -3,7 +3,7 @@
  * Plugin Name: AffiChat - WhatsApp Gateway for WordPress & WooCommerce
  * Plugin URI:  https://chat.affidev.com
  * Description: Integrasi WhatsApp Gateway serbaguna untuk WordPress & WooCommerce: Kirim notifikasi transaksi toko, pesan cepat langsung dari WP-Admin, auto-reply formulir website (Elementor, JetFormBuilder, CF7, WPForms, Fluent Forms), dan REST API pengembang.
- * Version:     1.0.10
+ * Version:     1.0.11
  * Author:      AffiChat
  * Author URI:  https://chat.affidev.com
  * License:     GPL-2.0+
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('AFFICHAT_WP_VERSION', '1.0.10');
+define('AFFICHAT_WP_VERSION', '1.0.11');
 define('AFFICHAT_WP_PATH', plugin_dir_path(__FILE__));
 define('AFFICHAT_WP_URL', plugin_dir_url(__FILE__));
 define('AFFICHAT_WP_BASENAME', plugin_basename(__FILE__));

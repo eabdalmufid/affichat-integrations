@@ -70,7 +70,7 @@ class AffiChat_WP_Updater {
             $current_version = $transient->checked[$basename];
         }
 
-        $logo_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/logo-nobg.png' : 'https://chat.affidev.com/assets/logo.png';
+        $logo_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/icon-128x128.png' : 'https://chat.affidev.com/assets/logo.png';
         $icon_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/icon-256x256.png' : $logo_url;
         $wp_ver   = function_exists('get_bloginfo') ? preg_replace('/-.*$/', '', get_bloginfo('version')) : '6.7';
 
@@ -245,7 +245,7 @@ class AffiChat_WP_Updater {
         }
 
         $remote = $this->get_remote_release();
-        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.10';
+        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.11';
         $version = ($remote && !empty($remote->version)) ? $remote->version : $current_version;
         $download_url = ($remote && !empty($remote->download_url)) ? $remote->download_url : '';
         $homepage = ($remote && !empty($remote->homepage)) ? $remote->homepage : 'https://chat.affidev.com';

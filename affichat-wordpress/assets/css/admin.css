@@ -1082,6 +1082,18 @@
     gap: 12px;
 }
 
+.affichat-grid-responsive-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 600px) {
+    .affichat-grid-responsive-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* -------------------------------------------------------------
    Mobile & Responsive Layout System (@media max-width: 782px)
    Standard WordPress Mobile Admin Breakpoint

@@ -33,15 +33,13 @@ jobs:
         with:
           name: "AffiChat WordPress Plugin ${{ github.ref_name }}"
           body: |
-            ### Apa yang Baru di v1.0.10
+            ### Apa yang Baru di v1.0.11
 
-            - **Kirim Gambar Produk WooCommerce** - Notifikasi pesanan selesai (`completed`) kini dapat menyertakan foto produk utama secara otomatis melalui WhatsApp (`send_image`).
-            - **Kirim Pin Lokasi Toko (GPS)** - Bagikan pin peta interaktif WhatsApp lokasi fisik toko langsung dari tab Alat & Kontak WP-Admin (`send_location`).
-            - **Survei & Polling Kepuasan Pelanggan** - Otomatis jadwalkan polling interaktif WhatsApp pasca pesanan selesai dengan delay hari yang dapat disesuaikan (`send_poll`).
-            - **Sinkronisasi Kontak Toko** - Selaraskan daftar pelanggan WooCommerce ke buku kontak AffiChat WhatsApp dalam satu klik atau otomatis saat checkout (`sync_contact`).
-            - **Siaran Cepat (Quick Broadcast)** - Kirim pengumuman atau promo sekaligus ke daftar nomor WhatsApp dengan dukungan caption dan foto dari WP-Admin.
-            - **Notifikasi Status On-Hold & Refunded** - Dukungan pesan otomatis baru untuk pesanan yang ditahan atau dikembalikan dananya, serta tombol kirim ulang WhatsApp di detail order WooCommerce.
-            - **Modal Detail & Pembaruan Andal** - Tampilan detail plugin kini menampilkan changelog terformat rapi dengan update otomatis yang stabil.
+            - **Desain Tab Alat & Kontak Seragam & Modern** - Menyelaraskan tata letak visual, header kartu, dan badges (*Buku Kontak CRM*, *Peta Interaktif*, *Survei Otomatis*, *Multi-Nomor*) setara dengan tab lainnya sesuai standar tema modern AffiChat.
+            - **Tombol Reset Per-Field & Form Lengkap** - Menambahkan tombol reset individual per-field dan tombol reset seksi/form dengan dialog konfirmasi modern, animasi pulse highlight, dan notifikasi toast instan.
+            - **Tata Letak Responsif Mobile (Antislop)** - Penataan form koordinat GPS toko menggunakan grid responsif yang otomatis menyesuaikan pada layar smartphone tanpa terpotong atau meluap.
+            - **Chip Variabel Siaran Cepat** - Menambahkan tombol sisip variabel instan (`{store_name}`, `{site_name}`, `{date}`, `{time}`) pada formulir siaran cepat WhatsApp.
+            - **Penyimpanan Pengaturan Terpisah** - Pemisahan aksi penyimpanan antar kartu agar preferensi sinkronisasi kontak dan survei kepuasan tidak saling menimpa.
 
             ### Cara Install / Perbarui
 

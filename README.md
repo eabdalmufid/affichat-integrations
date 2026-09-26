@@ -1,32 +1,63 @@
 # AffiChat Integrations
 
-Kumpulan modul integrasi resmi untuk platform **AffiChat (WA Gateway)**.
+[![GitHub Release](https://img.shields.io/github/v/release/eabdalmufid/affichat-integrations?color=00A884)](https://github.com/eabdalmufid/affichat-integrations/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Modul-modul ini dirancang khusus untuk memanggil **19 endpoint publik REST API** AffiChat secara aman, ringan, dan *type-safe*, serta mendengarkan event **Webhook Real-Time** (`messages.upsert`, `session.status`) dengan verifikasi kriptografi HMAC-SHA256.
+Koleksi paket SDK dan modul integrasi resmi untuk ekosistem **AffiChat (WhatsApp Gateway)**.
 
-## Modul Tersedia
+Semua modul dirancang untuk berinteraksi langsung dengan 19 endpoint REST API AffiChat secara aman dan terstruktur, serta memproses event **Webhook Real-Time** (`messages.upsert`, `session.status`) dengan verifikasi kriptografi HMAC-SHA256.
 
-| Modul | Paket / Tipe | Deskripsi |
-| :--- | :--- | :--- |
-| **[AffiChat SDK](./affichat-sdk)** | `@affidev/affichat` (NPM) | TypeScript & JavaScript SDK (Zero runtime dependency, native `fetch`, webhook helpers) |
-| **[n8n Community Node](./n8n-nodes-affichat)** | `@affidev/n8n-nodes-affichat` (NPM) | Action node (19 operasi) & Trigger node (Webhook listener pesan masuk & status sesi) |
-| **[WordPress & WooCommerce Plugin](./affichat-wordpress)** | `affichat-wordpress` (WP Plugin) | Plugin resmi notifikasi WhatsApp otomatis untuk WordPress, Form, & WooCommerce (HPOS compliant, auto-updater) |
-| **[Laravel Notification Channel](./affichat-laravel)** | `affidev/affichat` (Composer) | Paket resmi Laravel Notification Channel, Facade Client, & Webhook helper |
+---
+
+## Modul Integrasi Resmi
+
+| Modul | Tipe / Distribusi | Status | Deskripsi |
+| :--- | :--- | :--- | :--- |
+| **[WordPress & WooCommerce Plugin](./affichat-wordpress)** | WordPress Plugin | `v1.0.11` | Notifikasi transaksi toko, auto-reply formulir universal, pin lokasi GPS, survei polling kepuasan, sinkronisasi buku kontak CRM, dan siaran massal. Kompatibel dengan HPOS dan auto-updater GitHub. |
+| **[AffiChat SDK](./affichat-sdk)** | NPM (`@affidev/affichat`) | `v1.0.0` | Klien TypeScript dan JavaScript untuk Node.js, Bun, Deno, dan browser. Berbasis `fetch` native tanpa dependensi runtime eksternal. |
+| **[n8n Community Node](./n8n-nodes-affichat)** | NPM (`@affidev/n8n-nodes-affichat`) | `v1.0.0` | Node tindakan (*action*) dan pemicu alur kerja (*trigger*) untuk orkestrasi otomasi WhatsApp di platform n8n. |
+| **[Laravel Notification Channel](./affichat-laravel)** | Composer (`affidev/affichat`) | `v1.0.0` | Driver channel notifikasi bawaan Laravel, Facade client mandiri, dan middleware verifikasi webhook HMAC. |
+
+---
 
 ## Kemampuan Utama
 
-### 1. Pengiriman & Operasi (19 Endpoint REST API)
-- **Kirim Pesan (8)**: Teks (Spintax & Variables), Gambar, Dokumen, Audio, Video, Lokasi, Kontak, Polling.
-- **Antrean Siaran (6)**: Send Bulk, List Kampanye, Detail Kampanye, Pause, Resume, Cancel.
-- **Grup WhatsApp (2)**: List Grup, Metadata Grup.
-- **Utilitas (3)**: Health Check, Cek API Key (`GET /api/key/check`), Cek Profil Nomor WhatsApp.
+### 1. Operasi REST API (19 Endpoint)
+- **Pengiriman Pesan**:
+  - Teks biasa, spintax `{Halo|Hai}`, dan variabel template (`/api/send-text`)
+  - Gambar dengan caption (`/api/send-image`)
+  - Dokumen dan PDF (`/api/send-document`)
+  - Audio dan Voice Note (`/api/send-audio`)
+  - Video MP4 (`/api/send-video`)
+  - Pin lokasi GPS peta interaktif (`/api/send-location`)
+  - Kartu kontak vCard (`/api/send-contact`)
+  - Polling interaktif (*single/multi-select*) (`/api/send-poll`)
+- **Antrean Siaran Massal (Bulk Broadcast)**:
+  - Antrean pengiriman nomor massal dengan jeda pengiriman aman
+  - Manajemen kampanye siaran: list, detail, pause, resume, cancel
+- **Grup WhatsApp**:
+  - Daftar grup aktif dan pengambilan metadata partisipan on-demand
+- **Buku Kontak CRM**:
+  - Sinkronisasi data nama dan nomor kontak pelanggan ke server gateway
 
-### 2. Penerimaan Pesan & Event (Webhook & n8n Trigger)
-- **n8n Trigger Node (`AffiChatTrigger`)**: Memulai alur kerja n8n saat pesan WhatsApp masuk (`messages.upsert`) atau status perangkat berubah (`session.status`).
-- **Verifikasi Tanda Tangan Kriptografi**: Mendukung HMAC-SHA256 (`X-AffiChat-Signature`) untuk memvalidasi keaslian data.
-- **Penyaring Otomatis**: Opsi mengabaikan pesan keluar dari nomor bot (`ignoreSelf`) serta filter nomor pengirim spesifik (`senderFilter`).
-- **Helper Terpadu**: Tersedia fungsi verifikasi instan di TypeScript SDK (`AffiChatWebhook.verifySignature`) dan Laravel (`AffiChatWebhook::verifySignature`).
+### 2. Pipeline Webhook & Real-Time Event
+- **Trigger Pesan Masuk**: Menangkap event `messages.upsert` secara instan saat ada pesan masuk.
+- **Trigger Status Sesi**: Memantau status koneksi perangkat WhatsApp (`session.status`).
+- **Verifikasi HMAC-SHA256**: Memvalidasi keaslian pengirim menggunakan signature pada header `X-AffiChat-Signature`.
+- **Penyaring Otomatis**: Mendukung pengabaian pesan bot sendiri (*ignore self*) dan filter nomor pengirim tertentu.
+
+---
+
+## Panduan Memulai
+
+Pilih modul yang sesuai dengan kebutuhan integrasi Anda:
+- [Instalasi Plugin WordPress & WooCommerce](./affichat-wordpress)
+- [Instalasi Node.js / TypeScript SDK](./affichat-sdk)
+- [Instalasi n8n Community Node](./n8n-nodes-affichat)
+- [Instalasi Laravel Package](./affichat-laravel)
+
+---
 
 ## Lisensi
 
-MIT
+Repositori monorepo ini dilisensikan di bawah [Lisensi MIT](LICENSE). Masing-masing modul dapat memiliki ketentuan lisensi tersendiri (misalnya GPL-2.0+ untuk plugin WordPress).

@@ -143,7 +143,7 @@ class AffiChat_WP_WooCommerce {
             <?php if ($is_wc_native_tab) : ?>
                 <div class="affichat-wc-banner">
                     <div class="affichat-wc-banner-info">
-                        <img src="<?php echo esc_url(AFFICHAT_WP_URL . 'assets/images/logo-nobg.png'); ?>" alt="AffiChat Logo" class="affichat-wc-banner-logo" width="22" height="22" />
+                        <img src="<?php echo esc_url(AFFICHAT_WP_URL . 'assets/images/icon-128x128.png'); ?>" alt="AffiChat Logo" class="affichat-wc-banner-logo" width="22" height="22" />
                         <span class="affichat-wc-banner-title"><?php esc_html_e('Notifikasi WhatsApp WooCommerce', 'affichat-wp'); ?></span>
                         <span class="affichat-badge affichat-badge-success"><?php esc_html_e('Aktif', 'affichat-wp'); ?></span>
                     </div>

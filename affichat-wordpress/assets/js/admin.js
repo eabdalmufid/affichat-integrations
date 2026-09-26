@@ -503,7 +503,83 @@
             } else if (section === 'general') {
                 $('#affichat_wp_session_id').val('default');
                 window.showToast('Reset Selesai', 'ID Sesi WhatsApp telah di-reset ke nilai default.', 'info');
+            } else if (section === 'contacts_sync') {
+                $('#affichat_contacts_auto_sync').prop('checked', true);
+                $('#affichat_contacts_auto_sync').closest('.affichat-section-box').addClass('affichat-highlight-pulse');
+                setTimeout(function () {
+                    $('.affichat-highlight-pulse').removeClass('affichat-highlight-pulse');
+                }, 1200);
+                window.showToast('Reset Selesai', 'Preferensi sinkronisasi kontak dikembalikan ke default (aktif). Klik "Simpan Preferensi Kontak" untuk menyimpan.', 'success');
+            } else if (section === 'poll') {
+                $('#affichat_wc_poll_enabled').prop('checked', false);
+                $('#affichat_wc_poll_delay_days').val(2);
+                $('.affichat-btn-reset-single[data-reset-target="affichat_wc_poll_question"], .affichat-btn-reset-single[data-reset-target="affichat_wc_poll_options"]').each(function () {
+                    var tid = $(this).data('reset-target');
+                    var dval = $(this).data('default');
+                    if (tid && typeof dval !== 'undefined') {
+                        $('#' + tid).val(dval).addClass('affichat-highlight-pulse');
+                    }
+                });
+                $('#affichat_wc_poll_enabled').closest('.affichat-section-box').addClass('affichat-highlight-pulse');
+                $('#affichat_wc_poll_delay_days').addClass('affichat-highlight-pulse');
+                setTimeout(function () {
+                    $('.affichat-highlight-pulse').removeClass('affichat-highlight-pulse');
+                }, 1200);
+                window.showToast('Reset Selesai', 'Semua pengaturan polling kepuasan dikembalikan ke default. Klik "Simpan Pengaturan Polling" untuk menyimpan.', 'success');
             }
+        });
+
+        $('#affichat-btn-reset-loc').on('click', async function (e) {
+            e.preventDefault();
+            var ok = await window.showConfirmModal({
+                title: 'Reset Formulir Kirim Lokasi?',
+                message: 'Nomor penerima dan alamat akan dibersihkan, koordinat GPS dikembalikan ke default.',
+                confirmText: 'Ya, Reset',
+                cancelText: 'Batal',
+                type: 'warning'
+            });
+            if (!ok) return;
+
+            $('#affichat_loc_to').val('');
+            var defaultStoreName = $('.affichat-btn-reset-single[data-reset-target="affichat_store_name"]').data('default') || '';
+            var defaultAddress = $('.affichat-btn-reset-single[data-reset-target="affichat_store_address"]').data('default') || '';
+            $('#affichat_store_name').val(defaultStoreName);
+            $('#affichat_store_address').val(defaultAddress);
+            $('#affichat_store_lat').val('-6.2088');
+            $('#affichat_store_lng').val('106.8456');
+            $('#affichat-send-loc-result').hide().removeClass('success error').text('');
+
+            $('#affichat-form-send-location input, #affichat-form-send-location textarea').addClass('affichat-highlight-pulse');
+            setTimeout(function () {
+                $('.affichat-highlight-pulse').removeClass('affichat-highlight-pulse');
+            }, 1200);
+
+            window.showToast('Formulir Direset', 'Formulir kirim lokasi toko berhasil dikembalikan ke default.', 'info');
+        });
+
+        $('#affichat-btn-reset-broadcast').on('click', async function (e) {
+            e.preventDefault();
+            var ok = await window.showConfirmModal({
+                title: 'Reset Formulir Siaran Cepat?',
+                message: 'Daftar nomor penerima dan URL gambar akan dibersihkan, pesan dikembalikan ke default.',
+                confirmText: 'Ya, Reset',
+                cancelText: 'Batal',
+                type: 'warning'
+            });
+            if (!ok) return;
+
+            $('#affichat_broadcast_numbers').val('');
+            var defaultMsg = $('.affichat-btn-reset-single[data-reset-target="affichat_broadcast_message"]').data('default') || '';
+            $('#affichat_broadcast_message').val(defaultMsg);
+            $('#affichat_broadcast_image').val('');
+            $('#affichat-broadcast-result').hide().removeClass('success error').text('');
+
+            $('#affichat-form-quick-broadcast textarea, #affichat-form-quick-broadcast input').addClass('affichat-highlight-pulse');
+            setTimeout(function () {
+                $('.affichat-highlight-pulse').removeClass('affichat-highlight-pulse');
+            }, 1200);
+
+            window.showToast('Formulir Direset', 'Formulir siaran cepat berhasil dikosongkan ke default.', 'info');
         });
     });
 })(jQuery);
