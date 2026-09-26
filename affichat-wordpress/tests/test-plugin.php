@@ -6,7 +6,7 @@
  */
 
 define('ABSPATH', true);
-define('AFFICHAT_WP_VERSION', '1.0.4');
+define('AFFICHAT_WP_VERSION', '1.0.5');
 define('AFFICHAT_WP_PATH', dirname(__DIR__) . '/');
 define('AFFICHAT_WP_URL', 'http://example.com/wp-content/plugins/affichat-wordpress/');
 define('AFFICHAT_WP_BASENAME', 'affichat-wordpress/affichat-wordpress.php');
@@ -518,6 +518,9 @@ it('Markdown parser converts h3 headings', strpos($parsed_html, '<h3') !== false
 it('Markdown parser converts unordered lists', strpos($parsed_html, '<ul') !== false && strpos($parsed_html, '<li>First feature</li>') !== false);
 it('Markdown parser converts blockquotes', strpos($parsed_html, '<blockquote') !== false);
 it('Markdown parser converts links and code blocks', strpos($parsed_html, '<a href="https://chat.affidev.com"') !== false && strpos($parsed_html, 'code') !== false);
+
+$post_install_res = $updater->post_install(true, ['plugin' => 'affichat-wordpress/affichat-wordpress.php'], ['destination' => '/var/www/plugins/affichat-wordpress']);
+it('Updater post_install returns response boolean without deleting destination', $post_install_res === true);
 
 echo "\n=================================================================\n";
 echo "SUMMARY: Total Asserts: {$total_asserts} | Passed: {$passed_asserts} | Failed: {$failed_asserts}\n";

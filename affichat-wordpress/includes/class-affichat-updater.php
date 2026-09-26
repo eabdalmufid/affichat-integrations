@@ -69,6 +69,10 @@ class AffiChat_WP_Updater {
             $current_version = $transient->checked[$basename];
         }
 
+        $logo_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/logo-nobg.png' : 'https://chat.affidev.com/assets/logo.png';
+        $icon_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/icon-256x256.png' : $logo_url;
+        $wp_ver   = function_exists('get_bloginfo') ? preg_replace('/-.*$/', '', get_bloginfo('version')) : '6.7';
+
         $item = (object) [
             'id'            => $basename,
             'slug'          => 'affichat-wordpress',
@@ -77,11 +81,17 @@ class AffiChat_WP_Updater {
             'url'           => $remote->homepage,
             'package'       => $remote->download_url,
             'icons'         => [
-                'default' => defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/icon-256x256.png' : '',
+                '1x'      => $icon_url,
+                '2x'      => $icon_url,
+                'default' => $icon_url,
             ],
-            'banners'       => [],
+            'banners'       => [
+                'low'  => $logo_url,
+                'high' => $logo_url,
+            ],
             'banners_rtl'   => [],
-            'tested'        => '6.7',
+            'requires'      => '5.8',
+            'tested'        => !empty($wp_ver) ? $wp_ver : '6.7',
             'requires_php'  => '7.4',
             'compatibility' => new stdClass(),
         ];
@@ -190,6 +200,9 @@ class AffiChat_WP_Updater {
 
         $wp_version = function_exists('get_bloginfo') ? preg_replace('/-.*$/', '', get_bloginfo('version')) : '6.7';
 
+        $logo_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/logo-nobg.png' : 'https://chat.affidev.com/assets/logo.png';
+        $icon_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/icon-256x256.png' : $logo_url;
+
         $info = new stdClass();
         $info->name           = 'AffiChat - WhatsApp Gateway for WordPress & WooCommerce';
         $info->slug           = 'affichat-wordpress';
@@ -205,6 +218,15 @@ class AffiChat_WP_Updater {
         $info->ratings        = [5 => 28, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
         $info->num_ratings    = 28;
         $info->active_installs = 1000;
+        $info->icons          = [
+            '1x'      => $icon_url,
+            '2x'      => $icon_url,
+            'default' => $icon_url,
+        ];
+        $info->banners        = [
+            'low'  => $logo_url,
+            'high' => $logo_url,
+        ];
 
         $changelog_raw  = !empty($remote->changelog) ? $remote->changelog : sprintf(__('Versi %s telah dirilis.', 'affichat-wp'), esc_html($remote->version));
         $changelog_html = $this->parse_markdown_to_html($changelog_raw);
@@ -318,40 +340,28 @@ class AffiChat_WP_Updater {
     }
 
     /**
-     * Guarantees plugin directory remains 'affichat-wordpress' after decompression.
+     * Clears update transients and ensures plugin remains active after upgrade.
      *
-     * @param bool  $true Installation status.
-     * @param array $hook_extra Extra installation arguments.
-     * @param array $result Installation result data.
-     * @return array Modified result.
+     * @param bool|WP_Error $response   Installation status.
+     * @param array         $hook_extra Extra installation arguments.
+     * @param array         $result     Installation result data.
+     * @return bool|WP_Error Filter response.
      */
-    public function post_install($true, $hook_extra, $result) {
+    public function post_install($response, $hook_extra, $result) {
         $basename = defined('AFFICHAT_WP_BASENAME') ? AFFICHAT_WP_BASENAME : 'affichat-wordpress/affichat-wordpress.php';
         if (empty($hook_extra['plugin']) || $hook_extra['plugin'] !== $basename) {
-            return $result;
+            return $response;
         }
 
-        delete_transient(self::CACHE_KEY);
-
-        global $wp_filesystem;
-        if (!$wp_filesystem) {
-            return $result;
-        }
-
-        $proper_destination = WP_PLUGIN_DIR . '/affichat-wordpress';
-        if (!empty($result['destination']) && $result['destination'] !== $proper_destination) {
-            if ($wp_filesystem->exists($proper_destination)) {
-                $wp_filesystem->delete($proper_destination, true);
-            }
-            $wp_filesystem->move($result['destination'], $proper_destination);
-            $result['destination'] = $proper_destination;
+        if (function_exists('delete_transient')) {
+            delete_transient(self::CACHE_KEY);
         }
 
         if (function_exists('is_plugin_active') && is_plugin_active($basename)) {
             activate_plugin($basename);
         }
 
-        return $result;
+        return $response;
     }
 
     /**
