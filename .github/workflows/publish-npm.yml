@@ -5,10 +5,11 @@ on:
     branches:
       - main
     paths:
-      - 'affichat-sdk/**'
+      - 'affichat-node/**'
       - 'n8n-nodes-affichat/**'
       - '.github/workflows/publish-npm.yml'
     tags:
+      - 'node-v*'
       - 'sdk-v*'
       - 'n8n-v*'
       - 'v*'
@@ -29,7 +30,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Check and Publish SDK
-        working-directory: affichat-sdk
+        working-directory: affichat-node
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |

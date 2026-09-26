@@ -14,7 +14,7 @@ Semua modul dirancang untuk berinteraksi langsung dengan 19 endpoint REST API Af
 | Modul | Tipe / Distribusi | Status | Deskripsi |
 | :--- | :--- | :--- | :--- |
 | **[WordPress & WooCommerce Plugin](./affichat-wordpress)** | WordPress Plugin | `v1.0.11` | Notifikasi transaksi toko, auto-reply formulir universal, pin lokasi GPS, survei polling kepuasan, sinkronisasi buku kontak CRM, dan siaran massal. Kompatibel dengan HPOS dan auto-updater GitHub. |
-| **[AffiChat SDK](./affichat-sdk)** | NPM (`@affidev/affichat`) | `v1.0.0` | Klien TypeScript dan JavaScript untuk Node.js, Bun, Deno, dan browser. Berbasis `fetch` native tanpa dependensi runtime eksternal. |
+| **[AffiChat Node.js SDK](./affichat-node)** | NPM (`@affidev/affichat`) | `v1.0.0` | Klien TypeScript dan JavaScript untuk Node.js, Bun, Deno, dan browser. Berbasis `fetch` native tanpa dependensi runtime eksternal. |
 | **[n8n Community Node](./n8n-nodes-affichat)** | NPM (`@affidev/n8n-nodes-affichat`) | `v1.0.0` | Node tindakan (*action*) dan pemicu alur kerja (*trigger*) untuk orkestrasi otomasi WhatsApp di platform n8n. |
 | **[Laravel Notification Channel](./affichat-laravel)** | Composer (`affidev/affichat`) | `v1.0.0` | Driver channel notifikasi bawaan Laravel, Facade client mandiri, dan middleware verifikasi webhook HMAC. |
 
@@ -52,7 +52,7 @@ Semua modul dirancang untuk berinteraksi langsung dengan 19 endpoint REST API Af
 
 Pilih modul yang sesuai dengan kebutuhan integrasi Anda:
 - [Instalasi Plugin WordPress & WooCommerce](./affichat-wordpress)
-- [Instalasi Node.js / TypeScript SDK](./affichat-sdk)
+- [Instalasi Node.js SDK](./affichat-node)
 - [Instalasi n8n Community Node](./n8n-nodes-affichat)
 - [Instalasi Laravel Package](./affichat-laravel)
 
