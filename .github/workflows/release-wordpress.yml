@@ -31,6 +31,15 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: "AffiChat WordPress Plugin ${{ github.ref_name }}"
+          body: |
+            ### 📦 Instalasi & Pembaruan WordPress
+            Unduh file **`affichat-wordpress.zip`** di bawah ini untuk menginstal atau memperbarui plugin secara manual di WordPress (`wp-admin > Plugins > Add New > Upload Plugin`).
+
+            > ⚠️ **PENTING:**
+            > Jangan unduh **`Source code (zip)`** bawaan GitHub di bawah, karena file tersebut mengunduh seluruh isi monorepo (termasuk Laravel, n8n, SDK). File resmi khusus WordPress yang siap pakai adalah **`affichat-wordpress.zip`**.
           files: affichat-wordpress.zip
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
