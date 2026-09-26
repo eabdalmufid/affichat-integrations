@@ -248,7 +248,7 @@ class AffiChat_WP_Updater {
         }
 
         $remote = $this->get_remote_release();
-        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.6';
+        $current_version = defined('AFFICHAT_WP_VERSION') ? AFFICHAT_WP_VERSION : '1.0.8';
         $version = ($remote && !empty($remote->version)) ? $remote->version : $current_version;
         $download_url = ($remote && !empty($remote->download_url)) ? $remote->download_url : '';
         $homepage = ($remote && !empty($remote->homepage)) ? $remote->homepage : 'https://chat.affidev.com';
@@ -257,8 +257,10 @@ class AffiChat_WP_Updater {
 
         $wp_version = function_exists('get_bloginfo') ? preg_replace('/-.*$/', '', get_bloginfo('version')) : '6.7';
 
-        $logo_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/logo-nobg.png' : 'https://chat.affidev.com/assets/logo.png';
-        $icon_url = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL . 'assets/images/icon-256x256.png' : $logo_url;
+        $plugin_url  = defined('AFFICHAT_WP_URL') ? AFFICHAT_WP_URL : 'https://chat.affidev.com/wp-plugin/';
+        $icon_url    = $plugin_url . 'assets/images/icon-256x256.png';
+        $banner_low  = $plugin_url . 'assets/images/banner-772x250.jpg';
+        $banner_high = $plugin_url . 'assets/images/banner-1544x500.jpg';
 
         $info = new stdClass();
         $info->name           = 'AffiChat - WhatsApp Gateway for WordPress & WooCommerce';
@@ -281,8 +283,8 @@ class AffiChat_WP_Updater {
             'default' => $icon_url,
         ];
         $info->banners        = [
-            'low'  => $logo_url,
-            'high' => $logo_url,
+            'low'  => $banner_low,
+            'high' => $banner_high,
         ];
 
         $changelog_raw  = ($remote && !empty($remote->changelog)) ? $remote->changelog : sprintf(__('Versi %s telah dirilis.', 'affichat-wp'), esc_html($version));
@@ -505,7 +507,7 @@ class AffiChat_WP_Updater {
                     'download_url' => $download_url,
                     'homepage'     => $rel['html_url'] ?? ('https://github.com/' . $repo),
                     'published_at' => $rel['published_at'] ?? current_time('mysql'),
-                    'changelog'    => !empty($rel['body']) ? wp_kses_post(wpautop($rel['body'])) : '',
+                    'changelog'    => $rel['body'] ?? '',
                 ];
                 break;
             }

@@ -33,13 +33,29 @@ jobs:
         with:
           name: "AffiChat WordPress Plugin ${{ github.ref_name }}"
           body: |
-            ### 📦 Instalasi & Pembaruan WordPress
-            Unduh file **`affichat-wordpress.zip`** di bawah ini untuk menginstal atau memperbarui plugin secara manual di WordPress (`wp-admin > Plugins > Add New > Upload Plugin`).
+            ## AffiChat for WordPress & WooCommerce
 
-            > ⚠️ **PENTING:**
-            > Jangan unduh **`Source code (zip)`** bawaan GitHub di bawah, karena file tersebut mengunduh seluruh isi monorepo (termasuk Laravel, n8n, SDK). File resmi khusus WordPress yang siap pakai adalah **`affichat-wordpress.zip`**.
+            ### Apa yang Baru di Versi Ini
+
+            - **Modal Detail Plugin** — tampilan "Lihat detail" kini menampilkan informasi versi, changelog, dan banner gambar dengan benar.
+            - **Changelog Terformat** — teks changelog sekarang dirender sebagai HTML (heading, list, blockquote) bukan teks mentah.
+            - **Banner Plugin** — gambar banner landscape resmi AffiChat kini muncul di header modal detail.
+            - **Link Detail di Action Links** — tombol "Detail" baru tersedia langsung di kolom plugin tanpa perlu scroll ke bawah.
+            - **Fix Auto-Update** — proses "Perbarui Sekarang" tidak lagi menghapus folder plugin setelah update.
+
+            ### Cara Instalasi / Pembaruan Manual
+
+            Unduh file **`affichat-wordpress.zip`** di bawah ini, lalu buka `wp-admin > Plugins > Add New Plugin > Upload Plugin`.
+
+            > **Penting:** Jangan unduh `Source code (zip)` bawaan GitHub karena berisi seluruh monorepo. Gunakan hanya `affichat-wordpress.zip` di atas.
+
+            ### Syarat Sistem
+
+            - WordPress 5.8 atau lebih baru
+            - PHP 7.4 atau lebih baru
+            - WooCommerce 5.0+ (opsional, untuk notifikasi pesanan)
           files: affichat-wordpress.zip
-          generate_release_notes: true
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
