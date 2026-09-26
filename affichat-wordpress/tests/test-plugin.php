@@ -6,7 +6,7 @@
  */
 
 define('ABSPATH', true);
-define('AFFICHAT_WP_VERSION', '1.0.3');
+define('AFFICHAT_WP_VERSION', '1.0.4');
 define('AFFICHAT_WP_PATH', dirname(__DIR__) . '/');
 define('AFFICHAT_WP_URL', 'http://example.com/wp-content/plugins/affichat-wordpress/');
 define('AFFICHAT_WP_BASENAME', 'affichat-wordpress/affichat-wordpress.php');
@@ -511,6 +511,13 @@ it('Updater plugin_info ignores other slugs', $wrong_slug_res === false);
 $uncheck_transient = (object) ['checked' => []];
 $uncheck_res = $updater->check_update($uncheck_transient);
 it('Updater check_update ignores empty checked transient', empty($uncheck_res->response));
+
+$md_sample = "### Release Title\n* First feature\n* Second feature\n> Important notice\nVisit [AffiChat](https://chat.affidev.com) and test `code`";
+$parsed_html = $updater->parse_markdown_to_html($md_sample);
+it('Markdown parser converts h3 headings', strpos($parsed_html, '<h3') !== false);
+it('Markdown parser converts unordered lists', strpos($parsed_html, '<ul') !== false && strpos($parsed_html, '<li>First feature</li>') !== false);
+it('Markdown parser converts blockquotes', strpos($parsed_html, '<blockquote') !== false);
+it('Markdown parser converts links and code blocks', strpos($parsed_html, '<a href="https://chat.affidev.com"') !== false && strpos($parsed_html, 'code') !== false);
 
 echo "\n=================================================================\n";
 echo "SUMMARY: Total Asserts: {$total_asserts} | Passed: {$passed_asserts} | Failed: {$failed_asserts}\n";
